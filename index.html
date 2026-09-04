@@ -354,6 +354,12 @@ select.tool{font:500 11.5px/1 var(--ui);border:1px solid var(--line);border-radi
       <option value="view">Vederea curentă</option><option value="all">Toate straturile</option>
     </select></label>
   </div>
+  <div class="row2">
+    <label><span>Coordonate</span><select id="pcrs">
+      <option value="st70">Stereo 70 (EPSG:3844)</option>
+      <option value="wgs">WGS84 (EPSG:4326)</option>
+    </select></label>
+  </div>
   <div class="chk"><input type="checkbox" id="pleg" checked><label for="pleg">Include legenda</label></div>
   <div class="chk"><input type="checkbox" id="pscale" checked><label for="pscale">Include scara și coordonatele</label></div>
   <div class="act"><button id="pcancel">Anulează</button><button class="pri" id="pgo">Tipărește</button></div>
@@ -378,7 +384,7 @@ select.tool{font:500 11.5px/1 var(--ui);border:1px solid var(--line);border-radi
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
 
 <script>
-const CFG = {"title": "CenturaEst_Campina", "subtitle": "", "bounds": [[45.06662576225515, 25.687247217410572], [45.19174689656687, 25.840256241535506]], "initialBounds": [[45.081610541286516, 25.68222453447006], [45.15399014414284, 25.854217655475626]], "basemap": "osm", "infoDefault": "popup", "widgets": {"measure": true, "fullscreen": true, "minimap": true, "locate": true, "search": true, "print": true}, "layers": [{"name": "clip_intravilan", "type": "geojson", "file": "data/clip_intravilan.geojson", "geom": "polygon", "visible": true, "count": 12, "popup": true, "legend": [{"label": "clip_intravilan", "g": "polygon", "s": {"f": "#d5d5d5", "fo": 0.3, "s": "#d5d5d5", "so": 1.0, "w": 0.98, "r": 5.0}, "img": {"src": "data/symbols/clip_intravilan_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_ZonaObiective", "type": "geojson", "file": "data/clip_zonaobiective.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_ZonaObiective", "g": "polygon", "s": {"f": "#de9000", "fo": 0.0, "s": "#d98d00", "so": 1.0, "w": 3.78, "r": 5.0}, "img": {"src": "data/symbols/clip_zonaobiective_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_SondeAbandonate", "type": "geojson", "file": "data/clip_sondeabandonate.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_SondeAbandonate", "g": "polygon", "s": {"f": "#ffb1f6", "fo": 0.0, "s": "#ffb1f6", "so": 1.0, "w": 2.65, "r": 5.0}, "img": {"src": "data/symbols/clip_sondeabandonate_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_alunecari — zone_risc_alunecari", "type": "geojson", "file": "data/clip_risc_alunecari_zone_risc_alunecari.geojson", "geom": "polygon", "visible": true, "count": 91, "popup": true, "legend": [{"label": "clip_Risc_alunecari — zone_risc_alunecari", "g": "polygon", "s": {"f": "#ffab00", "fo": 0.0, "s": "#3388ff", "so": 0.6, "w": 1.0, "r": 5.0, "p": {"kind": "lines", "angle": 45.0, "gap": 7.56, "color": "#ffab00", "width": 1.13, "dash": null}}, "img": {"src": "data/symbols/clip_risc_alunecari_zone_risc_alunecari_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_inundatii_T100_unit — T100", "type": "geojson", "file": "data/clip_risc_inundatii_t100_unit_t100.geojson", "geom": "polygon", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_Risc_inundatii_T100_unit — T100", "g": "polygon", "s": {"f": "#4daf4a", "fo": 0.0, "s": "#3388ff", "so": 1.0, "w": 1.0, "r": 5.0, "p": {"kind": "dots", "dx": 9.07, "dy": 9.07, "color": "#4daf4a", "radius": 1.13}}, "img": {"src": "data/symbols/clip_risc_inundatii_t100_unit_t100_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_naturale", "type": "geojson", "file": "data/clip_lacuri_naturale.geojson", "geom": "polygon", "visible": true, "count": 4, "popup": true, "legend": [{"label": "clip_lacuri_naturale", "g": "polygon", "s": {"f": "#0000ff", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 1.0, "r": 5.0}, "img": {"src": "data/symbols/clip_lacuri_naturale_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_de_acumulare", "type": "geojson", "file": "data/clip_lacuri_de_acumulare.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_lacuri_de_acumulare", "g": "polygon", "s": {"f": "#135d92", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 1.0, "r": 5.0}, "img": {"src": "data/symbols/clip_lacuri_de_acumulare_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_cursuri_apa_PH", "type": "geojson", "file": "data/clip_cursuri_apa_ph.geojson", "geom": "line", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_cursuri_apa_PH", "g": "line", "s": {"f": "#25acdb", "fo": 0.0, "s": "#25acdb", "so": 1.0, "w": 1.5, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip_cursuri_apa_ph_0.png", "w": 20, "h": 20}}], "labels": {"size": 13.3, "color": "#25acdb", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_tronsoane", "type": "geojson", "file": "data/clip_tronsoane.geojson", "geom": "line", "visible": true, "count": 3, "popup": true, "legend": [{"label": "clip_tronsoane", "g": "line", "s": {"f": "#ec8cac", "fo": 0.0, "s": "#ec8cac", "so": 1.0, "w": 1.5, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip_tronsoane_0.png", "w": 20, "h": 20}}], "labels": {"size": 13.3, "color": "#ff1a00", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Nationale", "type": "geojson", "file": "data/clip_drumuri_nationale.geojson", "geom": "line", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_Drumuri Nationale", "g": "line", "s": {"f": "#db1e2a", "fo": 0.0, "s": "#db1e2a", "so": 1.0, "w": 1.5, "r": 5.0, "ml": true, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip_drumuri_nationale_0.png", "w": 20, "h": 20}}], "labels": {"size": 13.3, "color": "#fe0000", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Judetene", "type": "geojson", "file": "data/clip_drumuri_judetene.geojson", "geom": "line", "visible": true, "count": 8, "popup": true, "legend": [{"label": "clip_Drumuri Judetene", "g": "line", "s": {"f": "#1e28db", "fo": 0.0, "s": "#1e28db", "so": 1.0, "w": 1.5, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/clip_drumuri_judetene_0.png", "w": 20, "h": 20}}], "labels": {"size": 13.3, "color": "#1e28db", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Poduri_DJ_punct", "type": "geojson", "file": "data/clip_poduri_dj_punct.geojson", "geom": "point", "visible": true, "count": 16, "popup": true, "legend": [{"label": "clip_Poduri_DJ_punct", "g": "point", "s": {"f": "#54b04a", "fo": 1.0, "s": "#3d8035", "so": 1.0, "w": 1.51, "r": 7.56, "ic": true, "icon": {"src": "data/symbols/clip_poduri_dj_punct_0.png", "w": 21, "h": 21}}, "img": {"src": "data/symbols/clip_poduri_dj_punct_0.png", "w": 21, "h": 21}}], "labels": {"size": 13.3, "color": "#323232", "family": "Open Sans", "bold": false, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": false, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_ Poduri_DJ", "type": "geojson", "file": "data/clip__poduri_dj.geojson", "geom": "line", "visible": true, "count": 17, "popup": true, "legend": [{"label": "clip_ Poduri_DJ", "g": "line", "s": {"f": "#ffd000", "fo": 0.0, "s": "#ffd000", "so": 1.0, "w": 1.5, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip__poduri_dj_0.png", "w": 20, "h": 20}}], "labels": null, "cluster": false, "opacity": 1.0}, {"type": "xyz", "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "name": "Google Satellite", "visible": true, "opacity": 1.0}]};
+const CFG = {"title": "CenturaEst_Campina", "subtitle": "", "bounds": [[45.06662576225515, 25.687247217410572], [45.19174689656687, 25.840256241535506]], "initialBounds": [[45.081610541286516, 25.68222453447006], [45.15399014414284, 25.854217655475626]], "basemap": "osm", "infoDefault": "popup", "widgets": {"measure": true, "fullscreen": true, "minimap": true, "locate": true, "search": true, "print": true}, "layers": [{"name": "clip_intravilan", "type": "geojson", "file": "data/clip_intravilan.geojson", "geom": "polygon", "visible": true, "count": 12, "popup": true, "legend": [{"label": "clip_intravilan", "g": "polygon", "s": {"f": "#d5d5d5", "fo": 0.3, "s": "#d5d5d5", "so": 1.0, "w": 0.98, "r": 5.0}, "img": {"src": "data/symbols/clip_intravilan_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_ZonaObiective", "type": "geojson", "file": "data/clip_zonaobiective.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_ZonaObiective", "g": "polygon", "s": {"f": "#de9000", "fo": 0.0, "s": "#d98d00", "so": 1.0, "w": 3.78, "r": 5.0}, "img": {"src": "data/symbols/clip_zonaobiective_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_SondeAbandonate", "type": "geojson", "file": "data/clip_sondeabandonate.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_SondeAbandonate", "g": "polygon", "s": {"f": "#ffb1f6", "fo": 0.0, "s": "#ffb1f6", "so": 1.0, "w": 2.65, "r": 5.0}, "img": {"src": "data/symbols/clip_sondeabandonate_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_alunecari — zone_risc_alunecari", "type": "geojson", "file": "data/clip_risc_alunecari_zone_risc_alunecari.geojson", "geom": "polygon", "visible": true, "count": 91, "popup": true, "legend": [{"label": "clip_Risc_alunecari — zone_risc_alunecari", "g": "polygon", "s": {"f": "#ffab00", "fo": 0.6, "s": "#ffab00", "so": 0.6, "w": 1.74, "r": 5.0, "p": {"kind": "lines", "angle": 45.0, "gap": 7.56, "color": "#ffab00", "width": 1.13, "dash": null}}, "img": {"src": "data/symbols/clip_risc_alunecari_zone_risc_alunecari_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_inundatii_T100_unit — T100", "type": "geojson", "file": "data/clip_risc_inundatii_t100_unit_t100.geojson", "geom": "polygon", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_Risc_inundatii_T100_unit — T100", "g": "polygon", "s": {"f": "#4daf4a", "fo": 1.0, "s": "#4daf4a", "so": 1.0, "w": 1.36, "r": 5.0, "p": {"kind": "dots", "dx": 9.07, "dy": 9.07, "color": "#4daf4a", "radius": 1.13}}, "img": {"src": "data/symbols/clip_risc_inundatii_t100_unit_t100_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_naturale", "type": "geojson", "file": "data/clip_lacuri_naturale.geojson", "geom": "polygon", "visible": true, "count": 4, "popup": true, "legend": [{"label": "clip_lacuri_naturale", "g": "polygon", "s": {"f": "#0000ff", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 0.0, "r": 5.0}, "img": {"src": "data/symbols/clip_lacuri_naturale_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_de_acumulare", "type": "geojson", "file": "data/clip_lacuri_de_acumulare.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_lacuri_de_acumulare", "g": "polygon", "s": {"f": "#135d92", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 0.0, "r": 5.0}, "img": {"src": "data/symbols/clip_lacuri_de_acumulare_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_cursuri_apa_PH", "type": "geojson", "file": "data/clip_cursuri_apa_ph.geojson", "geom": "line", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_cursuri_apa_PH", "g": "line", "s": {"f": "#25acdb", "fo": 0.0, "s": "#25acdb", "so": 1.0, "w": 2.65, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip_cursuri_apa_ph_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#25acdb", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_tronsoane", "type": "geojson", "file": "data/clip_tronsoane.geojson", "geom": "line", "visible": true, "count": 3, "popup": true, "legend": [{"label": "clip_tronsoane", "g": "line", "s": {"f": "#ec8cac", "fo": 0.0, "s": "#ec8cac", "so": 1.0, "w": 8.04, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip_tronsoane_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#ff1a00", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Nationale", "type": "geojson", "file": "data/clip_drumuri_nationale.geojson", "geom": "line", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_Drumuri Nationale", "g": "line", "s": {"f": "#db1e2a", "fo": 0.0, "s": "#000000", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "round", "join": "round", "ml": true}, "img": {"src": "data/symbols/clip_drumuri_nationale_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#fe0000", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Judetene", "type": "geojson", "file": "data/clip_drumuri_judetene.geojson", "geom": "line", "visible": true, "count": 8, "popup": true, "legend": [{"label": "clip_Drumuri Judetene", "g": "line", "s": {"f": "#1e28db", "fo": 0.0, "s": "#1e28db", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/clip_drumuri_judetene_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#1e28db", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Poduri_DJ_punct", "type": "geojson", "file": "data/clip_poduri_dj_punct.geojson", "geom": "point", "visible": true, "count": 16, "popup": true, "legend": [{"label": "clip_Poduri_DJ_punct", "g": "point", "s": {"f": "#54b04a", "fo": 1.0, "s": "#3d8035", "so": 1.0, "w": 1.51, "r": 7.56, "ic": true, "icon": {"src": "data/symbols/clip_poduri_dj_punct_0.png", "w": 21, "h": 21}}, "img": {"src": "data/symbols/clip_poduri_dj_punct_0.png", "w": 21, "h": 21}}], "noLegend": false, "labels": {"size": 13.3, "color": "#323232", "family": "Open Sans", "bold": false, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": false, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_ Poduri_DJ", "type": "geojson", "file": "data/clip__poduri_dj.geojson", "geom": "line", "visible": true, "count": 17, "popup": true, "legend": [{"label": "clip_ Poduri_DJ", "g": "line", "s": {"f": "#ffd000", "fo": 0.0, "s": "#ffd000", "so": 1.0, "w": 7.03, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip__poduri_dj_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"type": "xyz", "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "name": "Google Satellite", "visible": true, "opacity": 1.0}]};
 
 proj4.defs("EPSG:3844",
   "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass " +
@@ -432,7 +438,48 @@ const DEF = { f: "#3388ff", fo: .35, s: "#2f5c8f", so: 1, w: 1, r: 5 };
 // Hașurile și umplerile cu puncte din QGIS se redesenează ca CanvasPattern,
 // la aceeași distanță și același unghi ca în proiect.
 const patternCache = {};
+const tileImages = {};
+
+function tilePattern(t) {
+  const key = "tile:" + t.src;
+  if (patternCache[key] !== undefined) return patternCache[key];
+  let img = tileImages[t.src];
+  if (!img) {
+    img = new Image();
+    img.onload = () => { patternCache[key] = undefined; redrawVectors(); };
+    img.src = t.src;
+    tileImages[t.src] = img;
+    return null;
+  }
+  if (!img.complete || !img.naturalWidth) return null;
+  try {
+    const ctx = document.createElement("canvas").getContext("2d");
+    const pat = ctx.createPattern(img, "repeat");
+    patternCache[key] = pat;
+    return pat;
+  } catch (err) { return null; }
+}
+
+function redrawVectors() {
+  entries.forEach(e => {
+    if (e.kind === "vector" && e.renderer && e.layer && map.hasLayer(e.layer)) {
+      try { e.renderer._redraw(); } catch (err) { /* ignoră */ }
+    }
+  });
+}
+
 function fillPattern(p) {
+  // pasul hașurii dat în unități de hartă se recalculează la fiecare zoom
+  if (p.gapM || p.dxM) {
+    p = Object.assign({}, p);
+    if (p.gapM) p.gap = Math.max(2, Math.min(120, p.gapM / MPP));
+    if (p.widthM) p.width = Math.max(0.4, Math.min(20, p.widthM / MPP));
+    if (p.dxM) p.dx = Math.max(3, Math.min(120, p.dxM / MPP));
+    if (p.dyM) p.dy = Math.max(3, Math.min(120, p.dyM / MPP));
+    p.gap = Math.round(p.gap * 2) / 2;
+    p.dx = p.dx && Math.round(p.dx * 2) / 2;
+    p.dy = p.dy && Math.round(p.dy * 2) / 2;
+  }
   const key = JSON.stringify(p);
   if (patternCache[key] !== undefined) return patternCache[key];
   let out = null;
@@ -478,8 +525,9 @@ if (L.Canvas && L.Canvas.prototype._fillStroke) {
   const base = L.Canvas.prototype._fillStroke;
   L.Canvas.prototype._fillStroke = function (ctx, layer) {
     const p = layer.options && layer.options.fillPatternDef;
-    if (p) {
-      const pat = fillPattern(p);
+    const t = layer.options && layer.options.fillTile;
+    if (p || t) {
+      const pat = p ? fillPattern(p) : tilePattern(t);
       if (pat) {
         ctx.globalAlpha = layer.options.fillOpacity != null ? layer.options.fillOpacity : 1;
         ctx.fillStyle = pat;
@@ -498,10 +546,27 @@ if (L.Canvas && L.Canvas.prototype._fillStroke) {
     base.call(this, ctx, layer);
   };
 }
+// metri pe pixel la latitudinea curentă: pentru dimensiunile date în unități
+// de hartă, care în QGIS se scalează cu zoom-ul
+function mPerPx() {
+  const lat = map.getCenter().lat;
+  return 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, map.getZoom());
+}
+let MPP = 1;
+function refreshMpp() { MPP = mPerPx() || 1; }
+refreshMpp();
+
+function mapUnits(meters, fallback, min, max) {
+  if (!meters) return fallback;
+  return Math.max(min, Math.min(max, meters / MPP));
+}
+
 function styleOf(feature) {
   const s = (feature && feature.properties && feature.properties._s) || DEF;
   const out = {
-    color: s.s || DEF.s, weight: s.w == null ? 1 : s.w, opacity: s.so == null ? 1 : s.so,
+    color: s.s || DEF.s,
+    weight: s.wM ? mapUnits(s.wM, s.w, 0.3, 40) : (s.w == null ? 1 : s.w),
+    opacity: s.so == null ? 1 : s.so,
     fillColor: s.f || DEF.f, fillOpacity: s.fo == null ? .35 : s.fo,
     fill: (s.fo == null ? .35 : s.fo) > 0
   };
@@ -510,6 +575,7 @@ function styleOf(feature) {
   if (s.join) out.lineJoin = s.join;
   if (out.weight === 0) out.stroke = false;
   if (s.p) { out.fillPatternDef = s.p; out.fill = true; }
+  if (s.ptile) { out.fillTile = s.ptile; out.fill = true; }
   return out;
 }
 function swatch(geom, s, img) {
@@ -819,6 +885,10 @@ CFG.layers.forEach((cfg, i) => {
       .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(data => {
         e.raw = data;
+        e.hasMapUnits = (data.features || []).some(f => {
+          const st = f.properties && f.properties._s;
+          return st && (st.wM || st.rM || (st.p && (st.p.gapM || st.p.dxM)));
+        });
         countClasses(e, box);
         (e.inner || e.layer).addData(data);
         if (e.clustered) e.layer.addLayer(e.inner);
@@ -1594,6 +1664,19 @@ function updateLabels() {
     clipLabels(e, i);
   });
 }
+map.on("zoomend viewreset", () => {
+  const before = MPP;
+  refreshMpp();
+  if (Math.abs(before - MPP) > 1e-9) {
+    for (const k in patternCache) delete patternCache[k];
+    entries.forEach(e => {
+      if (e.kind !== "vector" || !e.layer || !e.raw) return;
+      if (!e.hasMapUnits) return;
+      e.layer.eachLayer(l => { if (l.setStyle && l.feature) l.setStyle(styleOf(l.feature)); });
+    });
+    redrawVectors();
+  }
+});
 map.on("zoomend moveend viewreset", updateLabels);
 
 /* coordonate ------------------------------------------------------------ */
@@ -1879,6 +1962,7 @@ function legendHtml(scopeVisibleOnly) {
   let html = "";
   entries.forEach(e => {
     const cfg = e.cfg;
+    if (cfg.noLegend) return;
     if (!cfg.visible && scopeVisibleOnly) return;
     if (e.layer && !map.hasLayer(e.layer) && scopeVisibleOnly) return;
     const legend = cfg.legend || [];
@@ -1898,6 +1982,21 @@ function legendHtml(scopeVisibleOnly) {
       (legend.length > 1 ? "<h3>" + esc(cfg.name) + "</h3>" : "") + rows + "</div>";
   });
   return html || '<div class="it"><span>Fără straturi vizibile</span></div>';
+}
+
+function st70(lat, lng) {
+  try {
+    const c = proj4("EPSG:4326", "EPSG:3844", [lng, lat]);
+    return { x: c[1], y: c[0] };   // convenția românească: X = nord, Y = est
+  } catch (err) { return null; }
+}
+
+function fmtST70(lat, lng) {
+  const c = st70(lat, lng);
+  if (!c) return "";
+  const f = n => n.toLocaleString("ro-RO", { minimumFractionDigits: 2,
+                                             maximumFractionDigits: 2 });
+  return "X " + f(c.x) + "  Y " + f(c.y);
 }
 
 function scaleText() {
@@ -1925,13 +2024,27 @@ function buildSheet() {
   document.getElementById("sh_title").textContent =
     document.getElementById("ptitle").value || CFG.title || "Hartă";
   const now = new Date();
+  const crsName = document.getElementById("pcrs").value;
   document.getElementById("sh_meta").innerHTML =
     esc(document.getElementById("psub").value || "") +
-    (withScale ? "<br>Scara " + esc(scaleText()) + " · WGS84" : "");
+    (withScale ? "<br>Scara " + esc(scaleText()) + " · " +
+      (crsName === "st70" ? "Stereo 70 (EPSG:3844)" : "WGS84 (EPSG:4326)") : "");
   document.getElementById("sh_date").textContent = now.toLocaleString("ro-RO");
-  document.getElementById("sh_foot").textContent =
-    withScale ? "Centru: " + map.getCenter().lat.toFixed(5) + ", " +
-                map.getCenter().lng.toFixed(5) : "";
+  const ctr = map.getCenter();
+  const box = map.getBounds();
+  let coords = "";
+  if (withScale) {
+    if (crsName === "st70") {
+      coords = "Centru: " + fmtST70(ctr.lat, ctr.lng) +
+        "   ·   SV: " + fmtST70(box.getSouth(), box.getWest()) +
+        "   ·   NE: " + fmtST70(box.getNorth(), box.getEast());
+    } else {
+      coords = "Centru: " + ctr.lat.toFixed(5) + ", " + ctr.lng.toFixed(5) +
+        "   ·   SV: " + box.getSouth().toFixed(5) + ", " + box.getWest().toFixed(5) +
+        "   ·   NE: " + box.getNorth().toFixed(5) + ", " + box.getEast().toFixed(5);
+    }
+  }
+  document.getElementById("sh_foot").textContent = coords;
 
   const side = document.getElementById("sh_side");
   side.style.display = withLegend ? "" : "none";
