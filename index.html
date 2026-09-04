@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>CenturaEst_Campina</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ink:#101820; --paper:#eef1f4; --panel:#ffffff; --line:#ccd4dc;
+  --accent:#1f5f8b; --muted:#6b7885; --shadow:0 1px 2px rgba(16,24,32,.08),0 8px 24px rgba(16,24,32,.10);
+  --ui:"Inter Tight",system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:var(--ui);color:var(--ink);background:var(--paper)}
+#map{position:absolute;inset:0;background:var(--paper)}
+.leaflet-container{font-family:var(--ui)}
+
+/* ---- panou lateral ---------------------------------------------------- */
+#panel{
+  position:absolute;top:12px;left:12px;z-index:1000;width:288px;max-height:calc(100% - 24px);
+  display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+  border-radius:3px;box-shadow:var(--shadow);overflow:hidden;
+}
+#panel.hidden{display:none}
+#panel header{padding:14px 16px 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:flex-start;gap:8px}
+#panel header .ttl{flex:1;min-width:0}
+#panel header .hbtn{flex:0 0 auto;width:22px;height:22px;border:1px solid var(--line);
+  background:#fff;border-radius:2px;cursor:pointer;color:var(--muted);font:500 12px/1 var(--mono);
+  display:flex;align-items:center;justify-content:center;padding:0}
+#panel header .hbtn:hover{border-color:var(--accent);color:var(--accent)}
+#panel h1{margin:0;font-size:15px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+#panel .sub{margin:4px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.09em}
+#tools{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+button.tool{
+  font:500 11.5px/1 var(--ui);color:var(--ink);background:#fff;border:1px solid var(--line);
+  border-radius:2px;padding:7px 10px;cursor:pointer;
+}
+button.tool:hover{border-color:var(--accent);color:var(--accent)}
+button.tool:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+select.tool{font:500 11.5px/1 var(--ui);border:1px solid var(--line);border-radius:2px;padding:6px 8px;background:#fff}
+
+#layers{overflow-y:auto;padding:4px 0 8px;flex:1}
+.layer{padding:9px 16px;border-bottom:1px solid #eff2f5}
+.layer:last-child{border-bottom:0}
+.row{display:flex;align-items:flex-start;gap:7px}
+.exp{flex:0 0 auto;width:14px;height:14px;margin-top:1px;padding:0;border:0;background:none;
+  cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.exp:hover{color:var(--accent)}
+.exp svg{width:9px;height:9px;fill:currentColor;transition:transform .12s ease}
+.layer.collapsed .exp svg{transform:rotate(-90deg)}
+.exp.void{cursor:default;pointer-events:none}
+.layer.collapsed .legend,.layer.collapsed .subtools{display:none}
+.ccount{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-left:6px}
+.row input{margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto;width:14px;height:14px}
+.lname{font-size:12.5px;line-height:1.35;flex:1;cursor:pointer}
+.lmeta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.idbtn{flex:0 0 auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--muted);
+  border:1px solid var(--line);border-radius:2px;padding:2px 6px;cursor:pointer;background:#fff;margin-top:1px}
+.idbtn.on{color:#fff;background:var(--accent);border-color:var(--accent)}
+.idbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.leaflet-tooltip.maplabel{background:none;border:0;box-shadow:none;padding:0;
+  white-space:nowrap;pointer-events:none;font-family:var(--ui)}
+.leaflet-tooltip.maplabel:before{display:none}
+.leaflet-tooltip.maplabel .lbtxt{display:inline-block;transform-origin:center center}
+.idsec{border-bottom:1px solid #eef1f4}
+.idsec:last-child{border-bottom:0}
+.idsec>summary{cursor:pointer;padding:8px 14px;font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--accent);background:#f7f9fb;list-style:none}
+.idsec>summary::-webkit-details-marker{display:none}
+.idsec>summary:hover{background:#eef3f8}
+.idpick{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#f7f9fb;
+  border-bottom:1px solid var(--line)}
+.idpick select{flex:1;min-width:0;font:500 11.5px var(--ui);border:1px solid var(--line);
+  border-radius:2px;padding:5px 7px;background:#fff;color:var(--ink)}
+.idnav{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;
+  color:var(--muted);flex:0 0 auto}
+.idnav button{border:1px solid var(--line);background:#fff;border-radius:2px;cursor:pointer;
+  width:20px;height:20px;padding:0;line-height:1;color:var(--ink)}
+.idnav button:hover{border-color:var(--accent);color:var(--accent)}
+.idsec .cnt{font-family:var(--mono);font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0}
+.legend{margin:7px 0 0 30px;display:flex;flex-direction:column;gap:1px}
+.legend label{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#38424d;
+  line-height:1.25;cursor:pointer;padding:2px 4px 2px 0;border-radius:2px}
+.legend label:hover{background:#f1f4f7}
+.legend input{margin:0;width:12px;height:12px;accent-color:var(--accent);flex:0 0 auto}
+.legend svg{flex:0 0 auto}
+.legend .txt{flex:1}
+.legend .n{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.legend label.off .txt,.legend label.off svg{opacity:.35}
+.subtools{margin:5px 0 2px 30px;display:flex;gap:10px}
+.subtools a{font-family:var(--mono);font-size:9.5px;color:var(--muted);text-decoration:none;
+  border-bottom:1px dotted var(--line);cursor:pointer;letter-spacing:.05em}
+.subtools a:hover{color:var(--accent);border-color:var(--accent)}
+.layer.off .lname,.layer.off .legend,.layer.off .subtools{opacity:.42}
+
+/* ---- bară de stare ---------------------------------------------------- */
+#status{
+  position:absolute;right:12px;bottom:12px;z-index:1000;display:flex;gap:14px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);
+  padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--ink);
+}
+#status b{font-weight:500;color:var(--muted);letter-spacing:.06em}
+#loading{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1200;
+  background:var(--panel);border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);
+  padding:12px 18px;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em
+}
+
+/* ---- popup ------------------------------------------------------------ */
+.leaflet-popup-content-wrapper{border-radius:3px;box-shadow:var(--shadow)}
+.leaflet-popup-content{margin:0;font-size:12px;max-height:290px;overflow:auto}
+.pop h2{margin:0;padding:10px 14px;font-size:11px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;background:var(--ink);color:#fff}
+.pop table{border-collapse:collapse;width:100%}
+.pop td{padding:6px 14px;border-bottom:1px solid #eef1f4;vertical-align:top}
+.pop td.k{font-family:var(--mono);font-size:10.5px;color:var(--muted);white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.05em}
+.pop td.v{font-size:12px;word-break:break-word}
+.pop tr:last-child td{border-bottom:0}
+
+/* ---- unelte ----------------------------------------------------------- */
+#search{padding:10px 16px;border-bottom:1px solid var(--line);position:relative}
+#q{width:100%;font:400 12px var(--ui);border:1px solid var(--line);border-radius:2px;
+  padding:7px 9px;background:#fff;color:var(--ink)}
+#q:focus{outline:none;border-color:var(--accent)}
+#hits{position:absolute;left:16px;right:16px;top:44px;z-index:20;background:#fff;
+  border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);max-height:230px;
+  overflow-y:auto;display:none}
+#hits.on{display:block}
+#hits div{padding:7px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid #f1f4f7}
+#hits div:last-child{border-bottom:0}
+#hits div:hover{background:#f1f4f7}
+#hits .src{font-family:var(--mono);font-size:9.5px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em;display:block;margin-top:1px}
+#hits .none{color:var(--muted);cursor:default}
+
+#tbar{position:absolute;top:12px;right:12px;z-index:1000;display:flex;flex-direction:column;gap:6px}
+#tbar button{width:34px;height:34px;background:var(--panel);border:1px solid var(--line);
+  border-radius:3px;box-shadow:var(--shadow);cursor:pointer;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;padding:0}
+#tbar button:hover{color:var(--accent);border-color:var(--accent)}
+#tbar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#tbar svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.leaflet-top.leaflet-right{top:0;right:52px}
+
+#mini{position:absolute;right:12px;bottom:52px;width:150px;height:110px;z-index:900;
+  border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);overflow:hidden;
+  background:var(--paper)}
+#mini.hidden{display:none}
+
+#meas{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;z-index:1000;
+  background:var(--ink);color:#fff;border-radius:3px;box-shadow:var(--shadow);
+  padding:8px 14px;font-family:var(--mono);font-size:11.5px;display:none;letter-spacing:.04em}
+#meas.on{display:block}
+#meas b{color:#9fc7e4;font-weight:500}
+.measure-cursor,.measure-cursor .leaflet-interactive{cursor:crosshair!important}
+
+/* ---- coloană de informații -------------------------------------------- */
+#info{position:absolute;top:12px;left:312px;z-index:1000;width:300px;
+  max-height:calc(100% - 24px);display:none;flex-direction:column;background:var(--panel);
+  border:1px solid var(--line);border-radius:3px;box-shadow:var(--shadow);overflow:hidden}
+#info.on{display:flex}
+#ihead{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);
+  cursor:move;user-select:none;-webkit-user-select:none;touch-action:none}
+#info.moved{max-height:70%}
+#ihead h2{margin:0;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);flex:1}
+#ihead button{border:1px solid var(--line);background:#fff;border-radius:2px;cursor:pointer;
+  font:500 11px var(--ui);padding:4px 8px}
+#ihead button:hover{border-color:var(--accent);color:var(--accent)}
+#ibody{overflow-y:auto;flex:1}
+.resizer{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;
+  z-index:5;touch-action:none}
+.resizer:after{content:"";position:absolute;right:3px;bottom:3px;width:8px;height:8px;
+  border-right:2px solid var(--line);border-bottom:2px solid var(--line)}
+.resizer:hover:after{border-color:var(--accent)}
+#ibody .pop h2{border-radius:0}
+#ibody .empty{padding:16px 14px;font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ---- swipe ------------------------------------------------------------ */
+#swipe{position:absolute;inset:0;z-index:950;pointer-events:none;display:none}
+#swipe.on{display:block}
+#swipe .bar{position:absolute;background:#fff;
+  box-shadow:0 0 0 1.5px rgba(16,24,32,.65),0 0 10px rgba(16,24,32,.45)}
+#swipe.v .bar{top:0;bottom:0;width:3px;margin-left:-1.5px;cursor:col-resize}
+#swipe.h .bar{left:0;right:0;height:3px;margin-top:-1.5px;cursor:row-resize}
+#swipe .grip{position:absolute;width:36px;height:36px;background:var(--accent);
+  border:2px solid #fff;border-radius:50%;
+  box-shadow:0 0 0 1px rgba(16,24,32,.45),0 3px 12px rgba(16,24,32,.45);
+  pointer-events:auto;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:14px;line-height:1;user-select:none;-webkit-user-select:none;
+  touch-action:none}
+#swipe .grip:hover{filter:brightness(1.12)}
+#swipe.v .grip{top:50%;margin:-18px 0 0 -18px;cursor:col-resize}
+#swipe.h .grip{left:50%;margin:-18px 0 0 -18px;cursor:row-resize}
+#swipe.h .grip{transform:rotate(90deg)}
+
+/* ---- tabel de atribute ------------------------------------------------ */
+#tgrip{position:absolute;left:0;right:0;top:-3px;height:7px;cursor:row-resize;z-index:3;
+  touch-action:none}
+#tgrip:hover{background:rgba(31,95,139,.25)}
+#table{position:absolute;left:0;right:0;bottom:0;height:44%;z-index:1100;background:var(--panel);
+  border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(16,24,32,.12);display:none;
+  flex-direction:column}
+#table.on{display:flex}
+#thead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line)}
+#thead h2{margin:0;font-size:12.5px;font-weight:600;flex:0 0 auto}
+#thead .n{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.06em}
+#tfilter{flex:1;max-width:280px;font:400 11.5px var(--ui);border:1px solid var(--line);
+  border-radius:2px;padding:5px 8px}
+#thead button{font:500 11.5px var(--ui);border:1px solid var(--line);background:#fff;
+  border-radius:2px;padding:5px 9px;cursor:pointer}
+#thead button:hover{border-color:var(--accent);color:var(--accent)}
+#tbody{overflow:auto;flex:1}
+#tbody table{border-collapse:collapse;font-size:11.5px;table-layout:fixed}
+#tbody th{position:sticky;top:0;background:#f7f9fb;text-align:left;padding:7px 12px;
+  font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+#tbody th:hover{color:var(--accent)}
+#tbody th{position:sticky;overflow:hidden;text-overflow:ellipsis}
+.colres{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;
+  border-right:1px solid var(--line)}
+.colres:hover{background:var(--accent)}
+#tbody td{padding:6px 12px;border-bottom:1px solid #f1f4f7;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+#tbody.dense td{padding:2px 12px}
+#tbody.tall td{padding:12px 12px}
+#tbody tr{cursor:pointer}
+#tbody tbody tr:hover{background:#eef3f8}
+#tbody tr.sel{background:#e2edf6}
+#tmore{padding:10px;text-align:center}
+#tmore button{font:500 11.5px var(--ui);border:1px solid var(--line);background:#fff;
+  border-radius:2px;padding:6px 14px;cursor:pointer}
+
+@media (max-width:720px){
+  #panel{top:12px;left:12px;right:12px;width:auto;max-height:60%}
+  #status{left:12px;right:12px;bottom:12px;justify-content:space-between;font-size:10.5px;gap:8px}
+  #mini{display:none}
+  #tbar{top:auto;bottom:52px;right:12px}
+  #table{height:60%}
+  #info{left:12px;right:12px;top:auto;bottom:52px;width:auto;max-height:45%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<aside id="panel">
+  <header>
+    <div class="ttl">
+      <h1 id="ttl"></h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <button class="hbtn" id="collapseAll" title="Restrânge / extinde toate legendele">⌄</button>
+    <button class="hbtn" id="hidePanel" title="Ascunde panoul">×</button>
+  </header>
+  <div id="tools">
+    <button class="tool" id="fit">Încadrează</button>
+    <select class="tool" id="base" aria-label="Fundal"></select>
+    <select class="tool" id="imode" aria-label="Afișare informații">
+      <option value="popup">Info: popup</option>
+      <option value="panel">Info: coloană</option>
+    </select>
+  </div>
+  <div id="search">
+    <input id="q" type="search" autocomplete="off"
+           placeholder="Caută în date, Enter pentru adresă">
+    <div id="hits"></div>
+  </div>
+  <div id="layers"></div>
+</aside>
+
+<div id="tbar"></div>
+<div id="mini" class="hidden"></div>
+<div id="meas"></div>
+<aside id="info">
+  <div id="ihead" title="Trage pentru a muta fereastra, dublu-clic pentru poziția inițială">
+    <h2>Informații</h2><button id="iclose">Închide</button></div>
+  <div id="ibody"></div>
+</aside>
+<div id="swipe"><div class="bar"></div><div class="grip">⇄</div></div>
+<section id="table"><div id="tgrip" title="Trage pentru a schimba înălțimea"></div>
+  <div id="thead">
+    <h2 id="ttitle"></h2><span class="n" id="tcount"></span>
+    <input id="tfilter" type="search" placeholder="Filtrează rândurile">
+    <button id="tdens" title="Înălțimea rândurilor">Rânduri</button>
+    <button id="tcsv">CSV</button><button id="tclose">Închide</button>
+  </div>
+  <div id="tbody"></div>
+</section>
+
+<div id="status">
+  <span><b>ST70</b> <span id="st70">—</span></span>
+  <span><b>WGS84</b> <span id="wgs">—</span></span>
+</div>
+<div id="loading">Se încarcă datele…</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
+
+<script>
+const CFG = {"title": "CenturaEst_Campina", "subtitle": "", "bounds": [[45.06662576225515, 25.687247217410572], [45.19174689656687, 25.840256241535506]], "initialBounds": [[45.081610541286516, 25.68222453447006], [45.15399014414284, 25.854217655475626]], "basemap": "osm", "infoDefault": "popup", "widgets": {"measure": true, "fullscreen": true, "minimap": true, "locate": true, "search": true}, "layers": [{"name": "clip_intravilan", "type": "geojson", "file": "data/clip_intravilan.geojson", "geom": "polygon", "visible": true, "count": 12, "popup": true, "legend": [{"label": "clip_intravilan", "g": "polygon", "s": {"f": "#d5d5d5", "fo": 0.3, "s": "#d5d5d5", "so": 1.0, "w": 0.98, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_ZonaObiective", "type": "geojson", "file": "data/clip_zonaobiective.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_ZonaObiective", "g": "polygon", "s": {"f": "#de9000", "fo": 0.0, "s": "#d98d00", "so": 1.0, "w": 3.78, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_SondeAbandonate", "type": "geojson", "file": "data/clip_sondeabandonate.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_SondeAbandonate", "g": "polygon", "s": {"f": "#ffb1f6", "fo": 0.0, "s": "#ffb1f6", "so": 1.0, "w": 2.65, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_alunecari — zone_risc_alunecari", "type": "geojson", "file": "data/clip_risc_alunecari_zone_risc_alunecari.geojson", "geom": "polygon", "visible": true, "count": 91, "popup": true, "legend": [{"label": "clip_Risc_alunecari — zone_risc_alunecari", "g": "polygon", "s": {"f": "#ffab00", "fo": 0.6, "s": "#3388ff", "so": 0.6, "w": 1.0, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_inundatii_T100_unit — T100", "type": "geojson", "file": "data/clip_risc_inundatii_t100_unit_t100.geojson", "geom": "polygon", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_Risc_inundatii_T100_unit — T100", "g": "polygon", "s": {"f": "#4daf4a", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 1.0, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_naturale", "type": "geojson", "file": "data/clip_lacuri_naturale.geojson", "geom": "polygon", "visible": true, "count": 4, "popup": true, "legend": [{"label": "clip_lacuri_naturale", "g": "polygon", "s": {"f": "#0000ff", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 1.0, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_de_acumulare", "type": "geojson", "file": "data/clip_lacuri_de_acumulare.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_lacuri_de_acumulare", "g": "polygon", "s": {"f": "#135d92", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 1.0, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_cursuri_apa_PH", "type": "geojson", "file": "data/clip_cursuri_apa_ph.geojson", "geom": "line", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_cursuri_apa_PH", "g": "line", "s": {"f": "#25acdb", "fo": 0.0, "s": "#25acdb", "so": 1.0, "w": 1.5, "r": 5.0}}], "labels": {"size": 13.3, "color": "#25acdb", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_tronsoane", "type": "geojson", "file": "data/clip_tronsoane.geojson", "geom": "line", "visible": true, "count": 3, "popup": true, "legend": [{"label": "clip_tronsoane", "g": "line", "s": {"f": "#ec8cac", "fo": 0.0, "s": "#ec8cac", "so": 1.0, "w": 1.5, "r": 5.0}}], "labels": {"size": 13.3, "color": "#ff1a00", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Nationale", "type": "geojson", "file": "data/clip_drumuri_nationale.geojson", "geom": "line", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_Drumuri Nationale", "g": "line", "s": {"f": "#db1e2a", "fo": 0.0, "s": "#db1e2a", "so": 1.0, "w": 1.5, "r": 5.0}}], "labels": {"size": 13.3, "color": "#fe0000", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Judetene", "type": "geojson", "file": "data/clip_drumuri_judetene.geojson", "geom": "line", "visible": true, "count": 8, "popup": true, "legend": [{"label": "clip_Drumuri Judetene", "g": "line", "s": {"f": "#1e28db", "fo": 0.0, "s": "#1e28db", "so": 1.0, "w": 1.5, "r": 5.0}}], "labels": {"size": 13.3, "color": "#1e28db", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Poduri_DJ_punct", "type": "geojson", "file": "data/clip_poduri_dj_punct.geojson", "geom": "point", "visible": true, "count": 16, "popup": true, "legend": [{"label": "clip_Poduri_DJ_punct", "g": "point", "s": {"f": "#54b04a", "fo": 1.0, "s": "#3d8035", "so": 1.0, "w": 1.51, "r": 7.56}}], "labels": {"size": 13.3, "color": "#323232", "family": "Open Sans", "bold": false, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": false, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_ Poduri_DJ", "type": "geojson", "file": "data/clip__poduri_dj.geojson", "geom": "line", "visible": true, "count": 17, "popup": true, "legend": [{"label": "clip_ Poduri_DJ", "g": "line", "s": {"f": "#ffd000", "fo": 0.0, "s": "#ffd000", "so": 1.0, "w": 1.5, "r": 5.0}}], "labels": null, "cluster": false, "opacity": 1.0}, {"type": "xyz", "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "name": "Google Satellite", "visible": true, "opacity": 1.0}]};
+
+proj4.defs("EPSG:3844",
+  "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass " +
+  "+towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,5.69 +units=m +no_defs");
+
+document.getElementById("ttl").textContent = CFG.title;
+document.getElementById("sub").textContent = CFG.subtitle || (CFG.layers.length + " straturi");
+document.title = CFG.title;
+
+const map = L.map("map", { zoomControl: false, preferCanvas: true });
+L.control.zoom({ position: "topright" }).addTo(map);
+L.control.scale({ imperial: false, position: "bottomleft" }).addTo(map);
+const bounds = L.latLngBounds(CFG.bounds);
+const startBounds = CFG.initialBounds ? L.latLngBounds(CFG.initialBounds) : bounds;
+map.fitBounds(startBounds, { padding: [24, 24] });
+const W = CFG.widgets || {};
+
+/* fundaluri ------------------------------------------------------------- */
+const BASE = {
+  osm: () => L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19, attribution: "&copy; OpenStreetMap" }),
+  ortofoto: () => L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: "Esri, Maxar, Earthstar Geographics" }),
+  gri: () => L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        { maxZoom: 20, attribution: "&copy; OpenStreetMap, &copy; CARTO" }),
+  fara: () => null
+};
+const LABELS = { osm: "OpenStreetMap", ortofoto: "Ortofoto (Esri)", gri: "Fundal gri", fara: "Fără fundal" };
+const sel = document.getElementById("base");
+Object.keys(BASE).forEach(k => {
+  const o = document.createElement("option");
+  o.value = k; o.textContent = LABELS[k];
+  if (k === CFG.basemap) o.selected = true;
+  sel.appendChild(o);
+});
+let baseLayer = null;
+function setBase(key) {
+  if (baseLayer) map.removeLayer(baseLayer);
+  const f = BASE[key] || BASE.osm;
+  baseLayer = f();
+  if (baseLayer) baseLayer.addTo(map).bringToBack();
+}
+setBase(CFG.basemap in BASE ? CFG.basemap : "osm");
+sel.addEventListener("change", e => setBase(e.target.value));
+document.getElementById("fit").addEventListener("click",
+  () => map.fitBounds(startBounds, { padding: [24, 24] }));
+
+/* stiluri --------------------------------------------------------------- */
+const DEF = { f: "#3388ff", fo: .35, s: "#2f5c8f", so: 1, w: 1, r: 5 };
+function styleOf(feature) {
+  const s = (feature && feature.properties && feature.properties._s) || DEF;
+  const out = {
+    color: s.s || DEF.s, weight: s.w == null ? 1 : s.w, opacity: s.so == null ? 1 : s.so,
+    fillColor: s.f || DEF.f, fillOpacity: s.fo == null ? .35 : s.fo,
+    fill: (s.fo == null ? .35 : s.fo) > 0
+  };
+  if (s.d) out.dashArray = s.d;
+  if (out.weight === 0) out.stroke = false;
+  return out;
+}
+function swatch(geom, s) {
+  s = s || DEF;
+  const stroke = s.s || DEF.s, w = Math.min(4, s.w == null ? 1 : s.w) || 0.8;
+  const dash = s.d ? ' stroke-dasharray="' + s.d + '"' : "";
+  if (geom === "line")
+    return '<svg width="22" height="12"><line x1="1" y1="6" x2="21" y2="6" stroke="' + stroke +
+      '" stroke-width="' + w + '" stroke-opacity="' + (s.so == null ? 1 : s.so) + '"' + dash + '/></svg>';
+  if (geom === "point")
+    return '<svg width="22" height="12"><circle cx="11" cy="6" r="' + Math.min(5, s.r || 4) +
+      '" fill="' + (s.f || DEF.f) + '" fill-opacity="' + (s.fo == null ? 1 : s.fo) +
+      '" stroke="' + stroke + '" stroke-width="' + w + '"/></svg>';
+  return '<svg width="22" height="12"><rect x="1.5" y="1.5" width="19" height="9" fill="' +
+    (s.f || DEF.f) + '" fill-opacity="' + (s.fo == null ? .35 : s.fo) + '" stroke="' + stroke +
+    '" stroke-width="' + w + '"' + dash + '/></svg>';
+}
+
+/* popup ----------------------------------------------------------------- */
+const esc = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function attrTable(props) {
+  const rows = Object.keys(props).filter(k => k !== "_s" && k !== "_c" && k !== "_l")
+    .map(k => '<tr><td class="k">' + esc(k) + '</td><td class="v">' +
+      (props[k] === null || props[k] === "" ? "—" : esc(props[k])) + "</td></tr>").join("");
+  return rows ? "<table>" + rows + "</table>" : '<table><tr><td class="v">Fără atribute</td></tr></table>';
+}
+
+// Informațiile se arată pentru un singur strat odată: straturile suprapuse se
+// aleg din listă, iar entitățile aceluiași strat se parcurg cu săgețile.
+let idHits = [], idLayer = 0, idFeat = 0;
+
+function identifyHtml(hits) {
+  idHits = hits || [];
+  idLayer = 0;
+  idFeat = 0;
+  return identifyBody();
+}
+
+function identifyBody() {
+  if (!idHits.length) return '<div class="pop"><h2>Fără rezultate</h2></div>';
+  idLayer = Math.min(idLayer, idHits.length - 1);
+  const hit = idHits[idLayer];
+  idFeat = Math.min(idFeat, hit.feats.length - 1);
+  const feature = hit.feats[idFeat];
+
+  let head;
+  if (idHits.length > 1) {
+    head = '<div class="idpick"><select id="idLayerSel">' +
+      idHits.map((h, i) => '<option value="' + i + '"' + (i === idLayer ? " selected" : "") +
+        ">" + esc(h.name) + (h.feats.length > 1 ? " (" + h.feats.length + ")" : "") +
+        "</option>").join("") + "</select>";
+    head += hit.feats.length > 1 ? navHtml(hit.feats.length) : "";
+    head += "</div>";
+  } else {
+    head = "<h2>" + esc(hit.name) + "</h2>";
+    if (hit.feats.length > 1) head += '<div class="idpick">' + navHtml(hit.feats.length) + "</div>";
+  }
+  return '<div class="pop">' + head +
+    attrTable((feature && feature.feature && feature.feature.properties) || {}) + "</div>";
+}
+
+function navHtml(count) {
+  return '<span class="idnav"><button id="idPrev" title="Entitatea anterioară">‹</button>' +
+    (idFeat + 1) + " / " + count +
+    '<button id="idNext" title="Entitatea următoare">›</button></span>';
+}
+
+function refreshInfo() {
+  const html = identifyBody();
+  if (infoMode === "panel") {
+    const keep = infoBody.scrollTop;
+    infoBody.innerHTML = html;
+    infoBody.scrollTop = keep;
+  } else {
+    idPopup.setContent(html);
+  }
+}
+
+document.addEventListener("change", ev => {
+  if (ev.target && ev.target.id === "idLayerSel") {
+    idLayer = +ev.target.value;
+    idFeat = 0;
+    refreshInfo();
+  }
+});
+
+document.addEventListener("click", ev => {
+  const t = ev.target;
+  if (!t || !t.id) return;
+  if (t.id !== "idPrev" && t.id !== "idNext") return;
+  const hit = idHits[idLayer];
+  if (!hit) return;
+  idFeat = (idFeat + (t.id === "idNext" ? 1 : hit.feats.length - 1)) % hit.feats.length;
+  refreshInfo();
+});
+
+/* straturi -------------------------------------------------------------- */
+const panel = document.getElementById("layers");
+const N = CFG.layers.length;
+const entries = [];
+let pending = 0;
+let swipeMode = 0, swipePos = 0.5;      // 0 oprit, 1 vertical, 2 orizontal
+const swipeSet = new Set();
+
+// Fiecare strat vectorial are canvasul lui, toate în overlayPane, ordonate prin
+// z-index. Identificarea nu suferă: hit-testul e al nostru, pe geometrie, iar
+// canvasele separate permit decuparea individuală pentru instrumentul de swipe.
+const vTop = CFG.layers.findIndex(l => l.type === "geojson");
+
+// Elementele care trebuie decupate la swipe: canvasul stratului, pane-ul de
+// tile-uri sau raster și pane-ul propriu de etichete (tooltip-urile trăiesc în
+// alt strat DOM decât geometria, altfel ar rămâne vizibile peste decupaj).
+function clipTargets(e) {
+  const out = [];
+  if (e.renderer && e.renderer._container) out.push(e.renderer._container);
+  if (e.paneName) { const p = map.getPane(e.paneName); if (p) out.push(p); }
+  return out;   // pane-ul de etichete are dimensiune zero: inset() l-ar ascunde tot
+}
+
+function applyZ() {
+  entries.forEach((e, i) => {
+    const el = e.renderer && e.renderer._container;
+    if (el) el.style.zIndex = String(entries.length - i);
+  });
+}
+
+// Straturile foarte mari se reordonează o singură dată, la final: mutarea
+// fiecărei geometrii în canvas costă la sute de mii de entități.
+const HEAVY = CFG.layers.reduce((a, l) => a + (l.count || 0), 0) > 60000;
+
+function done() {
+  if (--pending <= 0) {
+    document.getElementById("loading").style.display = "none";
+    restackNow();
+    updateLabels();
+  }
+}
+
+// Reface ordinea vectorilor (jos → sus) în canvasul comun.
+function restackNow() {
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e.kind === "vector" && e.layer && map.hasLayer(e.layer)) {
+      try { e.layer.bringToFront(); } catch (err) { /* ignoră */ }
+    }
+  }
+}
+
+let restackQueued = false;
+function restack() {
+  if (HEAVY || restackQueued) return;
+  restackQueued = true;
+  setTimeout(() => { restackQueued = false; restackNow(); }, 0);
+}
+
+function visibleData(e) {
+  if (!e.raw) return null;
+  if (!e.hidden.size) return e.raw;
+  return { type: "FeatureCollection",
+    features: e.raw.features.filter(f => !e.hidden.has((f.properties || {})._c)) };
+}
+
+function refill(e) {
+  if (e.kind === "tiles") { if (e.layer && e.layer.redraw) e.layer.redraw(); return; }
+  if (!e.raw || !e.layer) return;
+  const target = e.inner || e.layer;
+  target.clearLayers();
+  const data = visibleData(e);
+  if (data && data.features.length) target.addData(data);
+  if (e.clustered) { e.layer.clearLayers(); e.layer.addLayer(e.inner); }
+  restack();
+  updateLabels();
+}
+
+CFG.layers.forEach((cfg, i) => {
+  const e = { cfg: cfg, layer: null, raw: null, hidden: new Set(),
+              kind: cfg.type === "geojson" ? "vector"
+                  : (cfg.type === "pbf" ? "tiles" : "raster") };
+  entries.push(e);
+
+  const box = document.createElement("div");
+  const many = (cfg.legend || []).length > 1 && cfg.type !== "image" && cfg.type !== "xyz";
+  box.classList.add("layer");
+  if (!cfg.visible) box.classList.add("off");
+  // peste cinci clase lista pornește restrânsă, ca panoul să rămână parcurgibil
+  if (many && cfg.legend.length > 5) box.classList.add("collapsed");
+  const id = "l" + i;
+  const caret = '<svg viewBox="0 0 10 10"><path d="M1 3h8L5 8z"/></svg>';
+  box.innerHTML =
+    '<div class="row">' +
+    (many ? '<button class="exp" title="Restrânge / extinde clasele">' + caret + "</button>"
+          : '<span class="exp void"></span>') +
+    '<input type="checkbox" id="' + id + '"' + (cfg.visible ? " checked" : "") + '>' +
+    '<label class="lname" for="' + id + '">' + esc(cfg.name) +
+    (many ? '<span class="ccount">' + cfg.legend.length + " clase</span>" : "") +
+    (cfg.count ? '<div class="lmeta">' + cfg.count.toLocaleString("ro-RO") + " entități</div>" : "") +
+    "</label>" +
+    (cfg.popup ? '<button class="idbtn on" data-act="id" title="Afișează informații la clic pe acest strat">i</button>' : "") +
+    '<button class="idbtn" data-act="swipe" title="Include stratul în comparația swipe">⇄</button>' +
+    (cfg.type === "geojson" ? '<button class="idbtn" data-act="table" title="Deschide tabelul de atribute">▤</button>' : "") +
+    "</div>";
+  panel.appendChild(box);
+
+  const add = () => { if (e.layer && !map.hasLayer(e.layer)) { e.layer.addTo(map); restack(); } };
+  const rm = () => { if (e.layer && map.hasLayer(e.layer)) map.removeLayer(e.layer); };
+
+  if (e.kind === "raster") {
+    // Rasterele primesc pane propriu, dar transparent la mouse, ca să nu blocheze
+    // popup-urile vectorilor de dedesubt.
+    const pane = "ly" + i;
+    e.paneName = pane;
+    map.createPane(pane);
+    const p = map.getPane(pane);
+    p.style.zIndex = (vTop === -1 || i < vTop) ? 401 + (N - i) : 200 + (N - i);
+    p.style.pointerEvents = "none";
+
+    if (cfg.type === "xyz") {
+      e.layer = L.tileLayer(cfg.url, { pane: pane, maxZoom: 22, minZoom: cfg.minZoom || 0,
+        opacity: cfg.opacity == null ? 1 : cfg.opacity, maxNativeZoom: cfg.maxZoom || 19 });
+    } else if (cfg.type === "wms") {
+      e.layer = L.tileLayer.wms(cfg.url, { pane: pane, layers: cfg.layers,
+        styles: cfg.styles || "", format: cfg.format || "image/png",
+        version: cfg.version || "1.3.0", transparent: true,
+        opacity: cfg.opacity == null ? 1 : cfg.opacity });
+    } else {
+      e.layer = L.imageOverlay(cfg.file, cfg.bounds,
+        { pane: pane, opacity: cfg.opacity == null ? 1 : cfg.opacity });
+    }
+    if (cfg.visible) add();
+  } else if (e.kind === "tiles") {
+    const styles = {};
+    styles[cfg.layerName] = (props, zoom) => {
+      const k = props._c == null ? 0 : props._c;
+      if (e.hidden.has(k)) return { fill: false, stroke: false, opacity: 0, fillOpacity: 0 };
+      const st = ((cfg.legend || [])[k] || (cfg.legend || [])[0] || {}).s || DEF;
+      const out = { color: st.s || DEF.s, weight: st.w == null ? 1 : st.w,
+        opacity: st.so == null ? 1 : st.so, fillColor: st.f || DEF.f,
+        fillOpacity: st.fo == null ? .35 : st.fo, fill: (st.fo == null ? .35 : st.fo) > 0,
+        radius: st.r || 4 };
+      if (st.d) out.dashArray = st.d;
+      return out;
+    };
+    e.paneName = "tl" + i;
+    map.createPane(e.paneName);
+    map.getPane(e.paneName).style.zIndex = String(400 + entries.length - i);
+    e.layer = L.vectorGrid.protobuf(cfg.dir + "/{z}/{x}/{y}.pbf", {
+      rendererFactory: L.canvas.tile,
+      vectorTileLayerStyles: styles,
+      interactive: !!cfg.popup,
+      minZoom: cfg.minZoom || 0,
+      maxNativeZoom: cfg.maxZoom || 14,
+      maxZoom: 22,
+      pane: e.paneName
+    });
+    if (cfg.popup) {
+      e.layer.on("click", ev => {
+        const props = (ev.layer && ev.layer.properties) || ev.propagatedFrom || {};
+        showInfo([{ name: cfg.name, feats: [{ feature: { properties: props } }] }], ev.latlng);
+        L.DomEvent.stop(ev);
+      });
+    }
+    if (cfg.visible) add();
+  } else {
+    pending++;
+    e.renderer = L.canvas({ padding: 0.3 });
+    if (cfg.labels) {
+      e.labelPane = "lp" + i;
+      map.createPane(e.labelPane);
+      const lp = map.getPane(e.labelPane);
+      lp.style.zIndex = String(640 + entries.length - i);
+      lp.style.pointerEvents = "none";
+    }
+    e.layer = L.geoJSON(null, {
+      renderer: e.renderer,
+      style: styleOf,
+      pointToLayer: (f, ll) => {
+        const s = (f.properties && f.properties._s) || DEF;
+        return L.circleMarker(ll, Object.assign(styleOf(f),
+          { renderer: e.renderer, radius: s.r || 5, fill: true,
+            fillOpacity: s.fo == null ? 1 : s.fo }));
+      },
+        interactive: false      // identificarea o face handlerul comun de clic
+    });
+    if (cfg.cluster && typeof L.markerClusterGroup === "function") {
+      e.clustered = true;
+      e.inner = e.layer;
+      e.layer = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 55,
+        spiderfyOnMaxZoom: true, showCoverageOnHover: false });
+      e.inner.options.interactive = true;
+      e.inner.options.onEachFeature = cfg.popup ? (f, lyr) =>
+        lyr.bindPopup(() => identifyHtml([{ name: cfg.name, feats: [lyr] }]),
+                      { maxWidth: 360 }) : undefined;
+    }
+    fetch(cfg.file)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(data => {
+        e.raw = data;
+        countClasses(e, box);
+        (e.inner || e.layer).addData(data);
+        if (e.clustered) e.layer.addLayer(e.inner);
+        if (cfg.visible) add();
+        done();
+      })
+      .catch(err => {
+        box.querySelector(".lname")
+           .insertAdjacentHTML("beforeend", '<div class="lmeta">nu s-a putut încărca</div>');
+        console.error(cfg.file, err);
+        done();
+      });
+  }
+
+  /* legendă / sub-straturi bifabile */
+  const legend = cfg.legend || [];
+  if (legend.length > 1 && e.kind === "vector") {
+    const tools = document.createElement("div");
+    tools.className = "subtools";
+    tools.innerHTML = '<a data-all="1">toate</a><a data-all="0">niciuna</a>';
+    box.appendChild(tools);
+
+    const wrap = document.createElement("div");
+    wrap.className = "legend";
+    wrap.innerHTML = legend.map((it, k) =>
+      '<label data-k="' + k + '"><input type="checkbox" checked>' + swatch(it.g, it.s) +
+      '<span class="txt">' + esc(it.label) + '</span><span class="n"></span></label>').join("");
+    box.appendChild(wrap);
+
+    wrap.addEventListener("change", ev => {
+      const label = ev.target.closest("label");
+      if (!label) return;
+      const k = Number(label.dataset.k);
+      if (ev.target.checked) e.hidden.delete(k); else e.hidden.add(k);
+      label.classList.toggle("off", !ev.target.checked);
+      refill(e);
+    });
+    tools.addEventListener("click", ev => {
+      if (!ev.target.dataset.all) return;
+      const on = ev.target.dataset.all === "1";
+      e.hidden.clear();
+      wrap.querySelectorAll("label").forEach(label => {
+        label.querySelector("input").checked = on;
+        label.classList.toggle("off", !on);
+        if (!on) e.hidden.add(Number(label.dataset.k));
+      });
+      refill(e);
+    });
+    e.legendEl = wrap;
+  } else if (legend.length >= 1) {
+    box.querySelector(".lname")
+       .insertAdjacentHTML("afterbegin", swatch(legend[0].g, legend[0].s) + " ");
+  }
+
+  box.querySelector("input").addEventListener("change", ev => {
+    box.classList.toggle("off", !ev.target.checked);
+    ev.target.checked ? add() : rm();
+    updateLabels();
+  });
+
+  e.identify = !!cfg.popup;
+  const expBtn = box.querySelector(".exp");
+  if (expBtn && many) expBtn.addEventListener("click",
+    () => box.classList.toggle("collapsed"));
+
+  box.querySelectorAll(".idbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const act = btn.dataset.act;
+      if (act === "id") {
+        e.identify = !e.identify;
+        btn.classList.toggle("on", e.identify);
+        btn.title = e.identify ? "Afișează informații la clic pe acest strat"
+                               : "Acest strat este ignorat la clic";
+      } else if (act === "swipe") {
+        if (swipeSet.has(i)) swipeSet.delete(i); else swipeSet.add(i);
+        btn.classList.toggle("on", swipeSet.has(i));
+        if (!swipeMode && swipeSet.size) setSwipeMode(1);
+        applyClip();
+      } else if (act === "table") {
+        if (!e.raw) return;
+        openTable(e);
+      }
+    });
+  });
+});
+if (pending === 0) document.getElementById("loading").style.display = "none";
+
+/* numărul de entități pe categorie, afișat lângă fiecare sub-strat */
+function countClasses(e, box) {
+  const wrap = e.legendEl;
+  if (!wrap || !e.raw) return;
+  const tally = {};
+  e.raw.features.forEach(f => {
+    const c = (f.properties || {})._c;
+    if (c != null) tally[c] = (tally[c] || 0) + 1;
+  });
+  wrap.querySelectorAll("label").forEach(label => {
+    const n = tally[Number(label.dataset.k)];
+    label.querySelector(".n").textContent = n ? n.toLocaleString("ro-RO") : "";
+  });
+}
+
+
+/* identificare pe toate straturile suprapuse ---------------------------- */
+// Toleranță de clic mai generoasă decât implicitul Leaflet (jumătate din grosime).
+const CLICK_TOL = 6;
+if (L.Path && L.Path.prototype) {
+  L.Path.prototype._clickTolerance = function () {
+    return (this.options.weight || 1) / 2 + CLICK_TOL;
+  };
+}
+
+const MAX_PER_LAYER = 25;
+const idPopup = L.popup({ maxWidth: 360, maxHeight: 320, autoPan: true });
+
+/* afișarea informațiilor: popup pe hartă sau coloană laterală ------------ */
+const infoBox = document.getElementById("info");
+const infoBody = document.getElementById("ibody");
+const imode = document.getElementById("imode");
+let infoMode = CFG.infoDefault === "panel" ? "panel" : "popup";
+if (imode) {
+  imode.value = infoMode;
+  imode.addEventListener("change", () => {
+    infoMode = imode.value;
+    map.closePopup();
+    if (infoMode !== "panel") infoBox.classList.remove("on");
+    else if (!infoBody.innerHTML) {
+      infoBody.innerHTML = '<div class="empty">Clic pe hartă pentru a vedea ' +
+        "atributele straturilor de sub cursor.</div>";
+      infoBox.classList.add("on");
+    }
+  });
+}
+const iclose = document.getElementById("iclose");
+if (iclose) iclose.addEventListener("click", () => infoBox.classList.remove("on"));
+
+/* fereastra de informații se poate muta cu antetul ---------------------- */
+function makeDraggable(box, handle) {
+  if (!box || !handle) return;
+  let dragging = false, offX = 0, offY = 0;
+  const host = () => {
+    const el = box.offsetParent || document.body;
+    const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+    return r || { left: 0, top: 0, width: 1200, height: 800 };
+  };
+  const start = ev => {
+    if (ev.target && ev.target.closest && ev.target.closest("button,input,select")) return;
+    const p = ev.touches ? ev.touches[0] : ev;
+    const r = box.getBoundingClientRect();
+    offX = p.clientX - r.left;
+    offY = p.clientY - r.top;
+    dragging = true;
+    box.classList.add("moved");
+    box.style.right = "auto";
+    box.style.bottom = "auto";
+    if (ev.cancelable) ev.preventDefault();
+  };
+  const move = ev => {
+    if (!dragging) return;
+    const p = ev.touches ? ev.touches[0] : ev;
+    const h = host();
+    let x = p.clientX - h.left - offX;
+    let y = p.clientY - h.top - offY;
+    x = Math.max(4, Math.min(h.width - 80, x));
+    y = Math.max(4, Math.min(h.height - 40, y));
+    box.style.left = x + "px";
+    box.style.top = y + "px";
+    if (ev.cancelable) ev.preventDefault();
+  };
+  const stop = () => { dragging = false; };
+  handle.addEventListener("mousedown", start);
+  handle.addEventListener("touchstart", start, { passive: false });
+  document.addEventListener("mousemove", move);
+  document.addEventListener("touchmove", move, { passive: false });
+  document.addEventListener("mouseup", stop);
+  document.addEventListener("touchend", stop);
+  handle.addEventListener("dblclick", () => {
+    box.classList.remove("moved");
+    box.style.left = box.style.top = box.style.right = box.style.bottom = "";
+    box.style.width = box.style.height = box.style.maxHeight = "";
+  });
+}
+makeDraggable(infoBox, document.getElementById("ihead"));
+
+function makeResizable(box, minW, minH) {
+  if (!box) return;
+  const grip = document.createElement("div");
+  grip.className = "resizer";
+  grip.title = "Trage pentru a redimensiona";
+  box.appendChild(grip);
+  let on = false, x0 = 0, y0 = 0, w0 = 0, h0 = 0;
+  const start = ev => {
+    const p = ev.touches ? ev.touches[0] : ev;
+    const r = box.getBoundingClientRect();
+    x0 = p.clientX; y0 = p.clientY; w0 = r.width; h0 = r.height;
+    on = true;
+    box.classList.add("moved");
+    if (ev.cancelable) ev.preventDefault();
+    ev.stopPropagation();
+  };
+  const move = ev => {
+    if (!on) return;
+    const p = ev.touches ? ev.touches[0] : ev;
+    box.style.width = Math.max(minW, w0 + p.clientX - x0) + "px";
+    box.style.height = Math.max(minH, h0 + p.clientY - y0) + "px";
+    box.style.maxHeight = "none";
+    if (ev.cancelable) ev.preventDefault();
+  };
+  const stop = () => { on = false; };
+  grip.addEventListener("mousedown", start);
+  grip.addEventListener("touchstart", start, { passive: false });
+  document.addEventListener("mousemove", move, { passive: false });
+  document.addEventListener("touchmove", move, { passive: false });
+  document.addEventListener("mouseup", stop);
+  document.addEventListener("touchend", stop);
+}
+makeResizable(infoBox, 220, 140);
+
+function showInfo(hits, latlng) {
+  if (!hits || !hits.length) {
+    map.closePopup();
+    if (infoMode === "panel") {
+      infoBody.innerHTML = '<div class="empty">Niciun obiect sub cursor.</div>';
+      infoBox.classList.add("on");
+    }
+    return;
+  }
+  const html = identifyHtml(hits);
+  if (infoMode === "panel") {
+    infoBody.innerHTML = html;
+    infoBox.classList.add("on");
+    infoBody.scrollTop = 0;
+  } else {
+    idPopup.setLatLng(latlng).setContent(html).openOn(map);
+  }
+}
+let MEASURING = false;   // cât timp se măsoară, clicul nu interoghează straturile
+
+map.on("click", ev => {
+  if (MEASURING) return;
+  const pt = map.mouseEventToLayerPoint(ev.originalEvent);
+  const hits = [];
+  entries.forEach(e => {
+    if (e.kind !== "vector" || e.clustered || !e.identify) return;
+    if (!e.layer || !map.hasLayer(e.layer)) return;
+    const feats = [];
+    e.layer.eachLayer(l => {
+      if (feats.length >= MAX_PER_LAYER) return;
+      try { if (l._containsPoint && l._containsPoint(pt)) feats.push(l); } catch (err) { /* ignoră */ }
+    });
+    if (feats.length) hits.push({ name: e.cfg.name, feats: feats });
+  });
+  showInfo(hits, ev.latlng);
+});
+
+/* swipe: comparație între straturi -------------------------------------- */
+// Straturile din swipeSet se decupează la stânga, respectiv deasupra cursorului.
+const swipeBox = document.getElementById("swipe");
+const swipeBar = swipeBox.querySelector(".bar");
+const swipeGrip = swipeBox.querySelector(".grip");
+
+function applyClip() {
+  const box = map.getContainer().getBoundingClientRect();
+  const cutX = box.left + box.width * swipePos;
+  const cutY = box.top + box.height * swipePos;
+  entries.forEach((e, i) => {
+    clipTargets(e).forEach(el => {
+    if (!swipeMode || !swipeSet.has(i)) { el.style.clipPath = ""; return; }
+    const r = el.getBoundingClientRect();
+    if (swipeMode === 1) {
+      el.style.clipPath = "inset(0 " + Math.max(0, Math.round(r.right - cutX)) + "px 0 0)";
+    } else {
+      el.style.clipPath = "inset(0 0 " + Math.max(0, Math.round(r.bottom - cutY)) + "px 0)";
+    }
+    });
+    clipLabels(e, i);
+  });
+}
+
+// Etichetele nu pot fi decupate prin CSS, fiindcă pane-ul care le conține nu are
+// dimensiune; se ascund una câte una, după poziția lor față de linia de swipe.
+function clipLabels(e, i) {
+  const tips = e.activeLabels;
+  if (!tips || !tips.length) return;
+  const cut = swipeMode === 1 ? map.getSize().x * swipePos : map.getSize().y * swipePos;
+  const on = swipeMode && swipeSet.has(i);
+  for (let k = 0; k < tips.length; k++) {
+    const tip = tips[k];
+    const el = tip.getElement && tip.getElement();
+    if (!el) continue;
+    if (!on) { el.style.visibility = ""; continue; }
+    let p = null;
+    try { p = map.latLngToContainerPoint(tip.getLatLng()); } catch (err) { p = null; }
+    if (!p) { el.style.visibility = ""; continue; }
+    el.style.visibility = (swipeMode === 1 ? p.x > cut : p.y > cut) ? "hidden" : "";
+  }
+}
+
+function placeSwipe() {
+  const size = map.getSize();
+  // stilurile inline ale orientării anterioare trebuie șterse: altfel un „left”
+  // rămas de la modul vertical taie bara orizontală din CSS.
+  swipeBar.style.left = swipeBar.style.top = "";
+  swipeGrip.style.left = swipeGrip.style.top = "";
+  if (swipeMode === 1) {
+    swipeBar.style.left = (size.x * swipePos) + "px";
+    swipeGrip.style.left = (size.x * swipePos) + "px";
+    swipeGrip.style.top = "50%";
+  } else if (swipeMode === 2) {
+    swipeBar.style.top = (size.y * swipePos) + "px";
+    swipeGrip.style.top = (size.y * swipePos) + "px";
+    swipeGrip.style.left = "50%";
+  }
+  applyClip();
+}
+
+function setSwipeMode(mode) {
+  swipeMode = mode;
+  swipeBox.classList.remove("on");
+  swipeBox.classList.remove("v");
+  swipeBox.classList.remove("h");
+  swipeBar.style.left = swipeBar.style.top = "";
+  swipeGrip.style.left = swipeGrip.style.top = "";
+  if (mode) {
+    swipeBox.classList.add("on");
+    swipeBox.classList.add(mode === 1 ? "v" : "h");
+    placeSwipe();
+  } else {
+    entries.forEach(e => clipTargets(e).forEach(el => { el.style.clipPath = ""; }));
+    applyClip();
+  }
+}
+
+(function dragSwipe() {
+  let dragging = false;
+  const move = ev => {
+    if (!dragging) return;
+    const box = map.getContainer().getBoundingClientRect();
+    const p = ev.touches ? ev.touches[0] : ev;
+    swipePos = swipeMode === 1 ? (p.clientX - box.left) / box.width
+                               : (p.clientY - box.top) / box.height;
+    swipePos = Math.min(0.98, Math.max(0.02, swipePos));
+    placeSwipe();
+    if (ev.cancelable) ev.preventDefault();
+  };
+  const stop = () => { dragging = false; };
+  ["mousedown", "touchstart"].forEach(ev =>
+    swipeGrip.addEventListener(ev, e => { dragging = true; e.stopPropagation(); }));
+  ["mousemove", "touchmove"].forEach(ev =>
+    document.addEventListener(ev, move, { passive: false }));
+  ["mouseup", "touchend"].forEach(ev => document.addEventListener(ev, stop));
+})();
+
+// Leaflet repoziționează canvasul stratului în propriul handler de moveend, care
+// poate rula după al nostru: decupajul se reaplică și pe următoarele două cadre,
+// altfel geometria dispare până la următoarea mișcare a cursorului.
+let clipRaf = 0;
+function scheduleClip() {
+  applyClip();
+  if (clipRaf) cancelAnimationFrame(clipRaf);
+  clipRaf = requestAnimationFrame(() => {
+    applyClip();
+    clipRaf = requestAnimationFrame(() => { clipRaf = 0; applyClip(); });
+  });
+}
+map.on("move zoom moveend zoomend zoomanim viewreset resize load", scheduleClip);
+map.on("resize", () => { if (swipeMode) placeSwipe(); });
+
+/* tabel de atribute ------------------------------------------------------ */
+const tableBox = document.getElementById("table");
+const tbody = document.getElementById("tbody");
+const tfilter = document.getElementById("tfilter");
+let tableEntry = null, tableRows = [], tableCols = [], tableShown = 0, tableSort = null;
+let colWidths = {}, density = 0;
+const DENSITY = ["", "dense", "tall"];
+const DEFAULT_COL = 170;
+const PAGE = 300;
+
+const skipKey = k => k === "_s" || k === "_c" || k === "_l" || k === "_a" || k === "_p";
+
+function openTable(e) {
+  if (!e.raw) return;
+  tableEntry = e;
+  tableSort = null;
+  document.getElementById("ttitle").textContent = e.cfg.name;
+  tableCols = [];
+  e.raw.features.slice(0, 50).forEach(f => {
+    Object.keys(f.properties || {}).forEach(k => {
+      if (!skipKey(k) && tableCols.indexOf(k) === -1) tableCols.push(k);
+    });
+  });
+  tfilter.value = "";
+  colWidths = {};
+  buildRows();
+  tableBox.classList.add("on");
+}
+
+function buildRows() {
+  const term = tfilter.value.trim().toLowerCase();
+  tableRows = tableEntry.raw.features.filter(f => {
+    if (!term) return true;
+    const p = f.properties || {};
+    return tableCols.some(c => p[c] != null && String(p[c]).toLowerCase().indexOf(term) > -1);
+  });
+  if (tableSort) {
+    const col = tableSort.col, dir = tableSort.dir;
+    tableRows = tableRows.slice().sort((a, b) => {
+      const x = (a.properties || {})[col], y = (b.properties || {})[col];
+      if (x == null) return 1;
+      if (y == null) return -1;
+      const nx = parseFloat(x), ny = parseFloat(y);
+      if (!isNaN(nx) && !isNaN(ny)) return (nx - ny) * dir;
+      return String(x).localeCompare(String(y), "ro") * dir;
+    });
+  }
+  document.getElementById("tcount").textContent =
+    tableRows.length.toLocaleString("ro-RO") + " din " +
+    tableEntry.raw.features.length.toLocaleString("ro-RO");
+  tableShown = 0;
+  const width = tableCols.reduce((a, c) => a + (colWidths[c] || DEFAULT_COL), 0);
+  tbody.innerHTML = '<table style="width:' + Math.max(width, 200) + 'px"><thead><tr>' +
+    tableCols.map(c => '<th data-c="' + esc(c) + '" style="width:' +
+      (colWidths[c] || DEFAULT_COL) + 'px">' + esc(c) +
+      (tableSort && tableSort.col === c ? (tableSort.dir > 0 ? " ↑" : " ↓") : "") +
+      '<span class="colres" title="Trage pentru lățimea coloanei"></span></th>').join("") +
+    "</tr></thead><tbody></tbody></table>";
+  appendRows();
+}
+
+function appendRows() {
+  const body = tbody.querySelector("tbody");
+  const slice = tableRows.slice(tableShown, tableShown + PAGE);
+  body.insertAdjacentHTML("beforeend", slice.map((f, k) => {
+    const p = f.properties || {};
+    return '<tr data-i="' + (tableShown + k) + '">' +
+      tableCols.map(c => "<td>" + (p[c] == null || p[c] === "" ? "—" : esc(p[c])) + "</td>").join("") +
+      "</tr>";
+  }).join(""));
+  tableShown += slice.length;
+  const old = document.getElementById("tmore");
+  if (old) old.remove();
+  if (tableShown < tableRows.length) {
+    tbody.insertAdjacentHTML("beforeend",
+      '<div id="tmore"><button>Încă ' +
+      Math.min(PAGE, tableRows.length - tableShown) + " rânduri</button></div>");
+  }
+}
+
+function zoomToFeature(f, name) {
+  const props = f.properties || {};
+  let target = null;
+  try {
+    target = props._p ? L.latLngBounds(L.latLng(props._p[0], props._p[1]),
+                                       L.latLng(props._p[0], props._p[1])).pad(0.0015)
+                      : L.geoJSON(f).getBounds();
+  } catch (err) { return; }
+  map.fitBounds(target, { maxZoom: 18, padding: [40, 40] });
+  showInfo([{ name: name, feats: [{ feature: f }] }], target.getCenter());
+}
+
+tbody.addEventListener("click", ev => {
+  if (ev.target.classList && ev.target.classList.contains("colres")) return;
+  const th = ev.target.closest("th");
+  if (th) {
+    const col = th.dataset.c;
+    tableSort = tableSort && tableSort.col === col
+      ? { col: col, dir: -tableSort.dir } : { col: col, dir: 1 };
+    buildRows();
+    return;
+  }
+  if (ev.target.closest("#tmore")) { appendRows(); return; }
+  const tr = ev.target.closest("tr[data-i]");
+  if (!tr || !tableEntry) return;
+  tbody.querySelectorAll("tr.sel").forEach(x => x.classList.remove("sel"));
+  tr.classList.add("sel");
+  zoomToFeature(tableRows[+tr.dataset.i], tableEntry.cfg.name);
+});
+
+/* lățimea coloanelor, prin tragere de marginea antetului */
+(function resizeColumns() {
+  let col = null, th = null, x0 = 0, w0 = 0;
+  tbody.addEventListener("mousedown", ev => {
+    if (!ev.target.classList || !ev.target.classList.contains("colres")) return;
+    th = ev.target.parentNode;
+    col = th.dataset.c;
+    x0 = ev.clientX;
+    w0 = th.getBoundingClientRect().width;
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
+  document.addEventListener("mousemove", ev => {
+    if (!col) return;
+    const w = Math.max(48, Math.round(w0 + ev.clientX - x0));
+    colWidths[col] = w;
+    th.style.width = w + "px";
+    const table = tbody.querySelector("table");
+    if (table) {
+      table.style.width =
+        tableCols.reduce((a, c) => a + (colWidths[c] || DEFAULT_COL), 0) + "px";
+    }
+    ev.preventDefault();
+  });
+  document.addEventListener("mouseup", () => { col = null; th = null; });
+})();
+
+/* înălțimea rândurilor */
+document.getElementById("tdens").addEventListener("click", () => {
+  density = (density + 1) % DENSITY.length;
+  tbody.classList.remove("dense");
+  tbody.classList.remove("tall");
+  if (DENSITY[density]) tbody.classList.add(DENSITY[density]);
+});
+
+/* înălțimea panoului cu tabelul */
+(function resizeTable() {
+  const grip = document.getElementById("tgrip");
+  let on = false;
+  const start = ev => { on = true; if (ev.cancelable) ev.preventDefault(); };
+  const move = ev => {
+    if (!on) return;
+    const p = ev.touches ? ev.touches[0] : ev;
+    const h = window.innerHeight - p.clientY;
+    tableBox.style.height = Math.max(120, Math.min(window.innerHeight - 80, h)) + "px";
+    if (ev.cancelable) ev.preventDefault();
+  };
+  const stop = () => { on = false; };
+  grip.addEventListener("mousedown", start);
+  grip.addEventListener("touchstart", start, { passive: false });
+  document.addEventListener("mousemove", move, { passive: false });
+  document.addEventListener("touchmove", move, { passive: false });
+  document.addEventListener("mouseup", stop);
+  document.addEventListener("touchend", stop);
+})();
+
+tfilter.addEventListener("input", () => { if (tableEntry) buildRows(); });
+document.getElementById("tclose").addEventListener("click",
+  () => tableBox.classList.remove("on"));
+document.getElementById("tcsv").addEventListener("click", () => {
+  if (!tableEntry) return;
+  const cell = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+  const csv = "\ufeff" + [tableCols.map(cell).join(",")].concat(
+    tableRows.map(f => tableCols.map(c => cell((f.properties || {})[c])).join(","))).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = tableEntry.cfg.name.replace(/[^\w-]+/g, "_") + ".csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+});
+
+/* etichete -------------------------------------------------------------- */
+const labelCss = [];
+const labelFallback = [];
+CFG.layers.forEach((cfg, i) => {
+  if (!cfg.labels) return;
+  const s = cfg.labels;
+  let rule = ".lb" + i + "{color:" + s.color + ";font-size:" + s.size + "px;" +
+    (s.bold ? "font-weight:700;" : "font-weight:500;") +
+    (s.italic ? "font-style:italic;" : "") +
+    (s.family ? "font-family:'" + s.family + "',var(--ui);" : "");
+  if (s.halo && s.haloW > 0) {
+    // Conturul se desenează sub glifă: rezultatul e uniform, spre deosebire de
+    // umbrele multiple, care se aglomerează la halouri groase.
+    rule += "-webkit-text-stroke:" + (s.haloW * 2) + "px " + s.halo + ";" +
+            "paint-order:stroke fill;";
+    // Browsere fără paint-order: umbre pe 12 direcții, cu rază mică.
+    const r = Math.min(2, s.haloW);
+    const ring = [];
+    for (let a = 0; a < 12; a++) {
+      const t = a * Math.PI / 6;
+      ring.push((Math.cos(t) * r).toFixed(2) + "px " + (Math.sin(t) * r).toFixed(2) +
+                "px 0 " + s.halo);
+    }
+    labelFallback.push("@supports not (paint-order: stroke){.lb" + i +
+      "{-webkit-text-stroke:0;text-shadow:" + ring.join(",") + "}}");
+  }
+  labelCss.push(rule + "}");
+});
+if ((labelCss.length || labelFallback.length) &&
+    typeof document.head !== "undefined" && document.head) {
+  const st = document.createElement("style");
+  st.textContent = ".leaflet-tooltip.maplabel{margin:0}" +
+                   labelCss.join("") + labelFallback.join("");
+  document.head.appendChild(st);
+}
+
+function zoomForScale(scale) {
+  const lat = map.getCenter().lat * Math.PI / 180;
+  return Math.log(559082264.028 * Math.cos(lat) / scale) / Math.LN2;
+}
+
+// Etichetele sunt tooltip-uri independente, ancorate în punctul calculat la export
+// (centroid dacă e în poligon, altfel polul de inaccesibilitate), nu în centrul
+// dreptunghiului de încadrare — altfel ies din poligoanele concave.
+const labelGroup = L.layerGroup().addTo(map);
+
+/* poziționarea etichetelor în raport cu fereastra curentă --------------- */
+// Dacă ancora calculată la export iese din ecran dar geometria e încă parțial
+// vizibilă, eticheta se mută în porțiunea vizibilă, în loc să dispară.
+
+function ringContains(ring, x, y) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function polyContains(rings, x, y) {
+  if (!rings.length || !ringContains(rings[0], x, y)) return false;
+  for (let h = 1; h < rings.length; h++) if (ringContains(rings[h], x, y)) return false;
+  return true;
+}
+
+function pointInGeometry(ll, geom) {
+  if (!geom) return false;
+  const x = ll.lng, y = ll.lat;
+  if (geom.type === "Polygon") return polyContains(geom.coordinates, x, y);
+  if (geom.type === "MultiPolygon") return geom.coordinates.some(p => polyContains(p, x, y));
+  return false;
+}
+
+function clipBounds(gb, view) {
+  const s = Math.max(gb.getSouth(), view.getSouth()), n = Math.min(gb.getNorth(), view.getNorth());
+  const w = Math.max(gb.getWest(), view.getWest()), e = Math.min(gb.getEast(), view.getEast());
+  if (s >= n || w >= e) return null;
+  return L.latLngBounds([s, w], [n, e]);
+}
+
+// Punct aflat pe traseu, la jumătatea porțiunii vizibile: se interpolează pe
+// segment, nu se alege un vârf, ca eticheta să nu sară alături de linie.
+function midVisibleOnLine(geom, view) {
+  const parts = geom.type === "LineString" ? [geom.coordinates]
+              : (geom.type === "MultiLineString" ? geom.coordinates : null);
+  if (!parts) return null;
+  const segs = [];
+  let span = 0;
+  parts.forEach(part => {
+    for (let i = 1; i < part.length; i++) {
+      const a = L.latLng(part[i - 1][1], part[i - 1][0]);
+      const b = L.latLng(part[i][1], part[i][0]);
+      if (!view.contains(a) && !view.contains(b)) continue;
+      let len = 0;
+      try { len = map.distance(a, b); } catch (err) { len = 0; }
+      if (len <= 0) continue;
+      segs.push({ a: a, b: b, len: len });
+      span += len;
+    }
+  });
+  if (!segs.length) return null;
+  let target = span / 2, acc = 0;
+  for (let i = 0; i < segs.length; i++) {
+    const sg = segs[i];
+    if (acc + sg.len >= target) {
+      const t = (target - acc) / sg.len;
+      const at = L.latLng(sg.a.lat + (sg.b.lat - sg.a.lat) * t,
+                          sg.a.lng + (sg.b.lng - sg.a.lng) * t);
+      if (view.contains(at)) return at;
+      return view.contains(sg.a) ? sg.a : sg.b;
+    }
+    acc += sg.len;
+  }
+  return view.contains(segs[0].a) ? segs[0].a : segs[0].b;
+}
+
+const GRID = 9;
+
+// Caută în dreptunghi punctul interior cel mai apropiat de o țintă. Dacă
+// geometria nu are niciun punct interior acolo, returnează null: eticheta
+// dispare, dar nu apare niciodată în afara poligonului.
+function interiorPoint(geom, box, aim) {
+  const target = aim || box.getCenter();
+  if (!geom) return target;
+  if (pointInGeometry(target, geom)) return target;
+  const south = box.getSouth(), north = box.getNorth();
+  const west = box.getWest(), east = box.getEast();
+  let best = null;
+  for (let i = 1; i < GRID; i++) {
+    for (let j = 1; j < GRID; j++) {
+      const p = L.latLng(south + (north - south) * i / GRID,
+                         west + (east - west) * j / GRID);
+      if (!pointInGeometry(p, geom)) continue;
+      const dy = (p.lat - target.lat) / ((north - south) || 1);
+      const dx = (p.lng - target.lng) / ((east - west) || 1);
+      const d = dx * dx + dy * dy;
+      if (!best || d < best.d) best = { p: p, d: d };
+    }
+  }
+  return best ? best.p : null;
+}
+
+function visiblePoint(l, props, view, gb) {
+  const geom = l.feature && l.feature.geometry;
+  if (geom && (geom.type === "LineString" || geom.type === "MultiLineString")) {
+    return midVisibleOnLine(geom, view);
+  }
+  // marginile ecranului se evită, ca eticheta să nu fie tăiată
+  const clip = clipBounds(gb, view.pad(-0.05)) || clipBounds(gb, view);
+  if (!clip) return null;
+  return interiorPoint(geom, clip, clip.getCenter());
+}
+
+function labelPosition(l, props, view) {
+  let anchor = props._p ? L.latLng(props._p[0], props._p[1])
+                        : (l.getLatLng ? l.getLatLng() : null);
+  // fără ancoră precalculată (strat exportat cu opțiunea dezactivată) se caută
+  // un punct interior, în loc să se folosească centrul dreptunghiului
+  if (!anchor && l.getBounds && l.feature) {
+    const geom = l.feature.geometry;
+    if (geom && (geom.type === "Polygon" || geom.type === "MultiPolygon")) {
+      try { anchor = interiorPoint(geom, l.getBounds(), null); } catch (err) { anchor = null; }
+    }
+  }
+  if (anchor && view.contains(anchor)) return anchor;
+  if (!l.getBounds) return null;
+  let gb = null;
+  try { gb = l.getBounds(); } catch (err) { return null; }
+  if (!gb || (gb.isValid && !gb.isValid()) || !view.intersects(gb)) return null;
+  return visiblePoint(l, props, view, gb);
+}
+
+function clearLabels(e) {
+  e.activeLabels = [];
+  if (!e.labelled || !e.layer) return;
+  e.layer.eachLayer(l => { if (l._tt) labelGroup.removeLayer(l._tt); });
+  e.labelled = false;
+}
+
+function updateLabels() {
+  const zoom = map.getZoom(), view = map.getBounds();
+  entries.forEach((e, i) => {
+    const s = e.cfg.labels;
+    if (!s || e.kind !== "vector" || e.clustered) return clearLabels(e);
+    if (!e.layer || !map.hasLayer(e.layer)) return clearLabels(e);
+    if (s.minScale && zoom < zoomForScale(s.minScale)) return clearLabels(e);
+    if (s.maxScale && zoom > zoomForScale(s.maxScale)) return clearLabels(e);
+    // straturile foarte mari se etichetează doar la scări mari, altfel parcurgerea e costisitoare
+    if ((e.cfg.count || 0) > 40000 && zoom < 15) return clearLabels(e);
+    let shown = 0;
+    const active = [];
+    const max = s.max || 1500;
+    e.layer.eachLayer(l => {
+      const props = l.feature && l.feature.properties;
+      const text = props && props._l;
+      if (!text) return;
+      const at = shown < max ? labelPosition(l, props, view) : null;
+      if (at) {
+        shown++;
+        if (!l._tt) {
+          const angle = s.angled ? props._a : null;
+          const inner = '<span class="lbtxt"' +
+            (angle ? ' style="transform:rotate(' + angle + 'deg)"' : "") + ">" +
+            esc(text) + "</span>";
+          l._tt = L.tooltip({ permanent: true, direction: "center", opacity: 1,
+            interactive: false, className: "maplabel lb" + i,
+            pane: e.labelPane || "tooltipPane" })
+            .setLatLng(at).setContent(inner);
+          l._at = at;
+        }
+        if (!labelGroup.hasLayer(l._tt)) labelGroup.addLayer(l._tt);
+        if (!l._at || l._at.lat !== at.lat || l._at.lng !== at.lng) {
+          l._tt.setLatLng(at);
+          l._at = at;
+        }
+        active.push(l._tt);
+      } else if (l._tt && labelGroup.hasLayer(l._tt)) {
+        labelGroup.removeLayer(l._tt);
+      }
+    });
+    e.labelled = true;
+    e.activeLabels = active;
+    clipLabels(e, i);
+  });
+}
+map.on("zoomend moveend viewreset", updateLabels);
+
+/* coordonate ------------------------------------------------------------ */
+const fmt = n => n.toLocaleString("ro-RO", { maximumFractionDigits: 0 });
+map.on("mousemove", e => {
+  const { lat, lng } = e.latlng;
+  document.getElementById("wgs").textContent = lat.toFixed(5) + ", " + lng.toFixed(5);
+  try {
+    const c = proj4("EPSG:4326", "EPSG:3844", [lng, lat]);
+    document.getElementById("st70").textContent = "X " + fmt(c[1]) + "  Y " + fmt(c[0]);
+  } catch (err) { /* ignoră */ }
+});
+
+/* bara de unelte -------------------------------------------------------- */
+const ICONS = {
+  full: '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  locate: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>',
+  measure: '<svg viewBox="0 0 24 24"><path d="M3 15.5 15.5 3 21 8.5 8.5 21z"/><path d="M7.5 11 9 12.5M10.5 8 12 9.5M13.5 5 15 6.5"/></svg>',
+  mini: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><rect x="12" y="12" width="7" height="7"/></svg>',
+  swipe: '<svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M8 8 4 12l4 4M16 8l4 4-4 4"/></svg>',
+  layers: '<svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>'
+};
+const tbar = document.getElementById("tbar");
+function toolButton(key, title, onClick) {
+  const b = document.createElement("button");
+  b.innerHTML = ICONS[key];
+  b.title = title;
+  b.setAttribute("aria-label", title);
+  b.addEventListener("click", () => onClick(b));
+  tbar.appendChild(b);
+  return b;
+}
+
+if (W.fullscreen) {
+  toolButton("full", "Ecran complet", b => {
+    const el = document.documentElement;
+    if (!document.fullscreenElement) {
+      (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
+      b.classList.add("on");
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
+      b.classList.remove("on");
+    }
+  });
+}
+
+if (W.locate) {
+  let here = null;
+  toolButton("locate", "Poziția mea", () => map.locate({ setView: true, maxZoom: 17 }));
+  map.on("locationfound", ev => {
+    if (here) map.removeLayer(here);
+    here = L.layerGroup([
+      L.circle(ev.latlng, { radius: ev.accuracy || 30, color: "#1f5f8b", weight: 1,
+        fillOpacity: .08 }),
+      L.circleMarker(ev.latlng, { radius: 5, color: "#fff", weight: 2, fillColor: "#1f5f8b",
+        fillOpacity: 1 })
+    ]).addTo(map);
+  });
+  map.on("locationerror", () => alert("Poziția nu a putut fi determinată."));
+}
+
+/* măsurare -------------------------------------------------------------- */
+if (W.measure) {
+  const panel = document.getElementById("meas");
+  let active = false, done = false, pts = [], line = null, area = null, marks = [];
+
+  const fmtLen = m => m < 1000 ? m.toFixed(1) + " m" : (m / 1000).toFixed(3) + " km";
+  const fmtArea = m2 => m2 < 10000 ? m2.toFixed(1) + " m²"
+    : (m2 < 1000000 ? (m2 / 10000).toFixed(4) + " ha" : (m2 / 1000000).toFixed(4) + " km²");
+
+  function sphericalArea(ring) {
+    const R = 6378137, rad = Math.PI / 180;
+    let sum = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      sum += (ring[i].lng - ring[j].lng) * rad *
+             (2 + Math.sin(ring[j].lat * rad) + Math.sin(ring[i].lat * rad));
+    }
+    return Math.abs(sum * R * R / 2);
+  }
+
+  function redraw() {
+    let total = 0;
+    for (let i = 1; i < pts.length; i++) total += map.distance(pts[i - 1], pts[i]);
+    if (line) map.removeLayer(line);
+    if (area) map.removeLayer(area);
+    line = area = null;
+    if (pts.length > 1) {
+      line = L.polyline(pts, { color: "#b4472f", weight: 2, dashArray: "5,4" }).addTo(map);
+    }
+    if (pts.length > 2) {
+      area = L.polygon(pts, { color: "#b4472f", weight: 0, fillOpacity: .12 }).addTo(map);
+    }
+    panel.innerHTML = pts.length < 2
+      ? "<b>Măsurare:</b> clic pentru puncte, dublu-clic pentru final, Esc anulează"
+      : "<b>Lungime</b> " + fmtLen(total) +
+        (pts.length > 2 ? "&nbsp;&nbsp;<b>Suprafață</b> " + fmtArea(sphericalArea(pts)) : "");
+  }
+
+  function reset() {
+    marks.forEach(m => map.removeLayer(m));
+    marks = []; pts = []; done = false;
+    if (line) map.removeLayer(line);
+    if (area) map.removeLayer(area);
+    line = area = null;
+  }
+
+  function stop(btn) {
+    active = false;
+    MEASURING = false;
+    map.doubleClickZoom.enable();
+    reset();
+    panel.classList.remove("on");
+    document.getElementById("map").classList.remove("measure-cursor");
+    if (btn) btn.classList.remove("on");
+  }
+
+  const btn = toolButton("measure", "Măsoară distanțe și suprafețe", b => {
+    if (active) { stop(b); return; }
+    active = true;
+    MEASURING = true;
+    map.doubleClickZoom.disable();
+    b.classList.add("on");
+    panel.classList.add("on");
+    document.getElementById("map").classList.add("measure-cursor");
+    redraw();
+  });
+
+  map.on("click", ev => {
+    if (!active) return;
+    if (done) { reset(); redraw(); }   // o nouă măsurătoare
+    pts.push(ev.latlng);
+    marks.push(L.circleMarker(ev.latlng, { radius: 3.5, color: "#b4472f", weight: 2,
+      fillColor: "#fff", fillOpacity: 1 }).addTo(map));
+    redraw();
+  });
+  // dublu-clic închide măsurătoarea, dar păstrează rezultatul pe ecran
+  map.on("dblclick", () => { if (active) done = true; });
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && active) stop(btn);
+  });
+}
+
+/* hartă de ansamblu ----------------------------------------------------- */
+if (W.minimap) {
+  const box = document.getElementById("mini");
+  box.classList.remove("hidden");
+  const mini = L.map("mini", { attributionControl: false, zoomControl: false, dragging: false,
+    scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false,
+    touchZoom: false, zoomAnimation: false });
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+    { maxZoom: 18 }).addTo(mini);
+  const frame = L.rectangle(map.getBounds(),
+    { color: "#b4472f", weight: 1.4, fill: false }).addTo(mini);
+  const sync = () => {
+    mini.setView(map.getCenter(), Math.max(0, map.getZoom() - 4), { animate: false });
+    frame.setBounds(map.getBounds());
+  };
+  map.on("move zoom moveend", sync);
+  sync();
+  toolButton("mini", "Ascunde/afișează harta de ansamblu",
+    b => { box.classList.toggle("hidden"); b.classList.toggle("on"); });
+}
+
+const swipeBtn = toolButton("swipe", "Comparație swipe: vertical, orizontal, oprit", b => {
+  setSwipeMode((swipeMode + 1) % 3);
+  b.classList.toggle("on", swipeMode !== 0);
+  b.title = swipeMode === 1 ? "Swipe vertical — clic pentru orizontal"
+          : (swipeMode === 2 ? "Swipe orizontal — clic pentru oprire"
+                             : "Comparație swipe: vertical, orizontal, oprit");
+  if (swipeMode && !swipeSet.size) {
+    const first = entries.findIndex(x => x.cfg.visible);
+    if (first > -1) {
+      swipeSet.add(first);
+      const btns = document.getElementById("layers").children[first];
+      if (btns) {
+        const sb = btns.querySelector('[data-act="swipe"]');
+        if (sb) sb.classList.add("on");
+      }
+    }
+    applyClip();
+  }
+});
+
+/* căutare: în date, apoi adrese ----------------------------------------- */
+if (W.search) {
+  const input = document.getElementById("q");
+  const list = document.getElementById("hits");
+
+  const hide = () => { list.classList.remove("on"); list.innerHTML = ""; };
+  function render(items) {
+    if (!items.length) { hide(); return; }
+    list.innerHTML = "";
+    items.slice(0, 25).forEach(it => {
+      const row = document.createElement("div");
+      row.innerHTML = esc(it.label) + '<span class="src">' + esc(it.source) + "</span>";
+      row.addEventListener("click", () => { it.go(); hide(); });
+      list.appendChild(row);
+    });
+    list.classList.add("on");
+  }
+
+  function searchData(term) {
+    const needle = term.toLowerCase();
+    const found = [];
+    entries.forEach(e => {
+      if (!e.raw || !e.cfg.popup) return;
+      for (const f of e.raw.features) {
+        if (found.length >= 40) break;
+        const props = f.properties || {};
+        for (const key of Object.keys(props)) {
+          if (key === "_s" || key === "_c" || key === "_p" || key === "_a") continue;
+          const val = props[key];
+          if (val == null) continue;
+          if (String(val).toLowerCase().indexOf(needle) === -1) continue;
+          found.push({
+            label: String(val), source: e.cfg.name + " · " + key,
+            go: () => {
+              const at = props._p ? L.latLng(props._p[0], props._p[1]) : null;
+              const target = at ? L.latLngBounds(at, at).pad(0.002)
+                                : L.geoJSON(f).getBounds();
+              map.fitBounds(target, { maxZoom: 18, padding: [40, 40] });
+              showInfo([{ name: e.cfg.name, feats: [{ feature: f }] }], target.getCenter());
+            }
+          });
+          break;
+        }
+      }
+    });
+    return found;
+  }
+
+  let timer = null;
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    const term = input.value.trim();
+    if (term.length < 2) { hide(); return; }
+    timer = setTimeout(() => render(searchData(term)), 180);
+  });
+
+  input.addEventListener("keydown", ev => {
+    if (ev.key !== "Enter") return;
+    const term = input.value.trim();
+    if (term.length < 3) return;
+    const local = searchData(term);
+    fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=ro&q=" +
+          encodeURIComponent(term))
+      .then(r => r.json())
+      .then(rows => {
+        const addr = (rows || []).map(r => ({
+          label: r.display_name, source: "adresă",
+          go: () => {
+            const bb = r.boundingbox;
+            if (bb) map.fitBounds([[+bb[0], +bb[2]], [+bb[1], +bb[3]]], { maxZoom: 18 });
+            else map.setView([+r.lat, +r.lon], 17);
+          }
+        }));
+        const all = local.concat(addr);
+        render(all.length ? all : [{ label: "Niciun rezultat", source: "", go: () => {} }]);
+      })
+      .catch(() => render(local));
+  });
+
+  document.addEventListener("click", ev => {
+    if (!list.contains(ev.target) && ev.target !== input) hide();
+  });
+}
+
+/* panoul de straturi ----------------------------------------------------- */
+const panelBox = document.getElementById("panel");
+const layersBtn = toolButton("layers", "Ascunde / afișează panoul de straturi", b => {
+  const hidden = panelBox.classList.toggle("hidden");
+  b.classList.toggle("on", hidden);
+});
+tbar.insertBefore(layersBtn, tbar.firstChild);
+document.getElementById("hidePanel").addEventListener("click", () => {
+  panelBox.classList.add("hidden");
+  layersBtn.classList.add("on");
+});
+document.getElementById("collapseAll").addEventListener("click", () => {
+  const rows = Array.prototype.slice.call(panel.children)
+    .filter(r => r.querySelector(".exp") && !r.querySelector(".exp.void"));
+  const anyOpen = rows.some(r => !r.classList.contains("collapsed"));
+  rows.forEach(r => r.classList.toggle("collapsed", anyOpen));
+});
+</script>
+</body>
+</html>
