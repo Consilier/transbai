@@ -124,6 +124,12 @@ select.tool{font:500 11.5px/1 var(--ui);border:1px solid var(--line);border-radi
   text-transform:uppercase;letter-spacing:.05em}
 .pop td.v{font-size:12px;word-break:break-word}
 .pop tr:last-child td{border-bottom:0}
+.kmbox{padding:9px 14px;background:#eef3f8;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:2px}
+.kmv{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--accent);
+  letter-spacing:.02em}
+.kmn{font-family:var(--mono);font-size:9.5px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em}
 
 /* ---- unelte ----------------------------------------------------------- */
 #search{padding:10px 16px;border-bottom:1px solid var(--line);position:relative}
@@ -274,7 +280,10 @@ select.tool{font:500 11.5px/1 var(--ui);border:1px solid var(--line);border-radi
 #sheet .head h1{margin:0;font-size:15pt;font-weight:600}
 #sheet .head .meta{font-family:var(--mono);font-size:8pt;color:#555;text-align:right;line-height:1.5}
 #sheet .body{display:flex;gap:10px;align-items:stretch}
-#sheet .mapwrap{flex:1;border:1px solid #888;position:relative;overflow:hidden}
+#sheet .mapwrap{flex:1;position:relative;overflow:hidden;background:#fff}
+#sheet .mapwrap>.pmap{position:absolute;transform-origin:0 0}
+#sheet .frame{position:absolute;left:0;top:0;pointer-events:none;z-index:500}
+#sheet .frame text{font-family:var(--mono);font-size:6.2pt;fill:#111}
 #sheet .side{width:180px;flex:0 0 auto;font-size:8.5pt}
 #sheet .side h3{margin:0 0 5px;font-size:8pt;text-transform:uppercase;letter-spacing:.08em;
   border-bottom:1px solid #999;padding-bottom:3px}
@@ -359,10 +368,35 @@ select.tool{font:500 11.5px/1 var(--ui);border:1px solid var(--line);border-radi
       <option value="st70">Stereo 70 (EPSG:3844)</option>
       <option value="wgs">WGS84 (EPSG:4326)</option>
     </select></label>
+    <label><span>Scară</span><select id="pscale2">
+      <option value="fit">Încadrează vederea</option>
+      <option value="width">Potrivește lățimea</option>
+      <option value="500">1 : 500</option>
+      <option value="1000">1 : 1 000</option>
+      <option value="2000">1 : 2 000</option>
+      <option value="5000">1 : 5 000</option>
+      <option value="10000">1 : 10 000</option>
+      <option value="25000">1 : 25 000</option>
+    </select></label>
   </div>
   <div class="chk"><input type="checkbox" id="pleg" checked><label for="pleg">Include legenda</label></div>
+  <div class="chk"><input type="checkbox" id="pgrid" checked><label for="pgrid">Cadru zebrat cu coordonate</label></div>
+  <div class="row2">
+    <label><span>Rezoluție</span><select id="pdpi">
+      <option value="1">96 dpi (ecran)</option>
+      <option value="2" selected>192 dpi</option>
+      <option value="3">288 dpi</option>
+      <option value="4">384 dpi</option>
+    </select></label>
+    <label><span>Fundal</span><select id="pbase">
+      <option value="keep">Ca pe hartă</option>
+      <option value="none">Fără fundal</option>
+    </select></label>
+  </div>
   <div class="chk"><input type="checkbox" id="pscale" checked><label for="pscale">Include scara și coordonatele</label></div>
-  <div class="act"><button id="pcancel">Anulează</button><button class="pri" id="pgo">Tipărește</button></div>
+  <div class="act"><button id="pcancel">Anulează</button>
+    <button id="ppdf">PDF vectorial</button>
+    <button class="pri" id="pgo">Tipărește</button></div>
 </div></div>
 
 <div id="sheet">
@@ -384,7 +418,7 @@ select.tool{font:500 11.5px/1 var(--ui);border:1px solid var(--line);border-radi
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.2/proj4.js"></script>
 
 <script>
-const CFG = {"title": "CenturaEst_Campina", "subtitle": "", "bounds": [[45.06662576225515, 25.687247217410572], [45.19174689656687, 25.840256241535506]], "initialBounds": [[45.081610541286516, 25.68222453447006], [45.15399014414284, 25.854217655475626]], "basemap": "osm", "infoDefault": "popup", "widgets": {"measure": true, "fullscreen": true, "minimap": true, "locate": true, "search": true, "print": true}, "layers": [{"name": "clip_intravilan", "type": "geojson", "file": "data/clip_intravilan.geojson", "geom": "polygon", "visible": true, "count": 12, "popup": true, "legend": [{"label": "clip_intravilan", "g": "polygon", "s": {"f": "#d5d5d5", "fo": 0.3, "s": "#d5d5d5", "so": 1.0, "w": 0.98, "r": 5.0}, "img": {"src": "data/symbols/clip_intravilan_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_ZonaObiective", "type": "geojson", "file": "data/clip_zonaobiective.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_ZonaObiective", "g": "polygon", "s": {"f": "#de9000", "fo": 0.0, "s": "#d98d00", "so": 1.0, "w": 3.78, "r": 5.0}, "img": {"src": "data/symbols/clip_zonaobiective_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_SondeAbandonate", "type": "geojson", "file": "data/clip_sondeabandonate.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_SondeAbandonate", "g": "polygon", "s": {"f": "#ffb1f6", "fo": 0.0, "s": "#ffb1f6", "so": 1.0, "w": 2.65, "r": 5.0}, "img": {"src": "data/symbols/clip_sondeabandonate_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_alunecari — zone_risc_alunecari", "type": "geojson", "file": "data/clip_risc_alunecari_zone_risc_alunecari.geojson", "geom": "polygon", "visible": true, "count": 91, "popup": true, "legend": [{"label": "clip_Risc_alunecari — zone_risc_alunecari", "g": "polygon", "s": {"f": "#ffab00", "fo": 0.6, "s": "#ffab00", "so": 0.6, "w": 1.74, "r": 5.0, "p": {"kind": "lines", "angle": 45.0, "gap": 7.56, "color": "#ffab00", "width": 1.13, "dash": null}}, "img": {"src": "data/symbols/clip_risc_alunecari_zone_risc_alunecari_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_Risc_inundatii_T100_unit — T100", "type": "geojson", "file": "data/clip_risc_inundatii_t100_unit_t100.geojson", "geom": "polygon", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_Risc_inundatii_T100_unit — T100", "g": "polygon", "s": {"f": "#4daf4a", "fo": 1.0, "s": "#4daf4a", "so": 1.0, "w": 1.36, "r": 5.0, "p": {"kind": "dots", "dx": 9.07, "dy": 9.07, "color": "#4daf4a", "radius": 1.13}}, "img": {"src": "data/symbols/clip_risc_inundatii_t100_unit_t100_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_naturale", "type": "geojson", "file": "data/clip_lacuri_naturale.geojson", "geom": "polygon", "visible": true, "count": 4, "popup": true, "legend": [{"label": "clip_lacuri_naturale", "g": "polygon", "s": {"f": "#0000ff", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 0.0, "r": 5.0}, "img": {"src": "data/symbols/clip_lacuri_naturale_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_lacuri_de_acumulare", "type": "geojson", "file": "data/clip_lacuri_de_acumulare.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_lacuri_de_acumulare", "g": "polygon", "s": {"f": "#135d92", "fo": 1.0, "s": "#3388ff", "so": 1.0, "w": 0.0, "r": 5.0}, "img": {"src": "data/symbols/clip_lacuri_de_acumulare_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "clip_cursuri_apa_PH", "type": "geojson", "file": "data/clip_cursuri_apa_ph.geojson", "geom": "line", "visible": true, "count": 9, "popup": true, "legend": [{"label": "clip_cursuri_apa_PH", "g": "line", "s": {"f": "#25acdb", "fo": 0.0, "s": "#25acdb", "so": 1.0, "w": 2.65, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip_cursuri_apa_ph_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#25acdb", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_tronsoane", "type": "geojson", "file": "data/clip_tronsoane.geojson", "geom": "line", "visible": true, "count": 3, "popup": true, "legend": [{"label": "clip_tronsoane", "g": "line", "s": {"f": "#ec8cac", "fo": 0.0, "s": "#ec8cac", "so": 1.0, "w": 8.04, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip_tronsoane_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#ff1a00", "family": "Open Sans", "bold": true, "italic": true, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Nationale", "type": "geojson", "file": "data/clip_drumuri_nationale.geojson", "geom": "line", "visible": true, "count": 1, "popup": true, "legend": [{"label": "clip_Drumuri Nationale", "g": "line", "s": {"f": "#db1e2a", "fo": 0.0, "s": "#000000", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "round", "join": "round", "ml": true}, "img": {"src": "data/symbols/clip_drumuri_nationale_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#fe0000", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Drumuri Judetene", "type": "geojson", "file": "data/clip_drumuri_judetene.geojson", "geom": "line", "visible": true, "count": 8, "popup": true, "legend": [{"label": "clip_Drumuri Judetene", "g": "line", "s": {"f": "#1e28db", "fo": 0.0, "s": "#1e28db", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/clip_drumuri_judetene_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#1e28db", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_Poduri_DJ_punct", "type": "geojson", "file": "data/clip_poduri_dj_punct.geojson", "geom": "point", "visible": true, "count": 16, "popup": true, "legend": [{"label": "clip_Poduri_DJ_punct", "g": "point", "s": {"f": "#54b04a", "fo": 1.0, "s": "#3d8035", "so": 1.0, "w": 1.51, "r": 7.56, "ic": true, "icon": {"src": "data/symbols/clip_poduri_dj_punct_0.png", "w": 21, "h": 21}}, "img": {"src": "data/symbols/clip_poduri_dj_punct_0.png", "w": 21, "h": 21}}], "noLegend": false, "labels": {"size": 13.3, "color": "#323232", "family": "Open Sans", "bold": false, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": false, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "clip_ Poduri_DJ", "type": "geojson", "file": "data/clip__poduri_dj.geojson", "geom": "line", "visible": true, "count": 17, "popup": true, "legend": [{"label": "clip_ Poduri_DJ", "g": "line", "s": {"f": "#ffd000", "fo": 0.0, "s": "#ffd000", "so": 1.0, "w": 7.03, "r": 5.0, "cap": "round", "join": "round"}, "img": {"src": "data/symbols/clip__poduri_dj_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"type": "xyz", "url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", "name": "Google Satellite", "visible": true, "opacity": 1.0}]};
+const CFG = {"title": "CenturaEst_Campina", "subtitle": "", "bounds": [[44.687289979548694, 25.446680673111924], [45.525691802218184, 26.63022653704017]], "initialBounds": [[44.86525713121799, 26.067912998138933], [45.012051915572215, 26.36255456937004]], "basemap": "osm", "infoDefault": "popup", "widgets": {"measure": true, "fullscreen": true, "minimap": true, "locate": true, "search": true, "print": true}, "layers": [{"name": "1_Drumuri Judetene", "type": "geojson", "file": "data/1_drumuri_judetene.geojson", "geom": "line", "visible": true, "count": 74, "popup": true, "popupFields": ["Indicativ drum", "Km început", "Km final", "Nr. crt.", "Localități traversate", "Traseu HG 540/2000", "Lungime HG 540/2000", "Lungime viabilitate", "Lungime reală [m]", "Observații", "Modificare", "HCJ modificare", "Indicativ_vechi"], "legend": [{"label": "1_Drumuri Judetene", "g": "line", "s": {"f": "#0000ff", "fo": 0.0, "s": "#000000", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "round", "join": "round", "ml": true}, "img": {"src": "data/symbols/1_drumuri_judetene_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#1e28db", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "2_Drumuri Nationale", "type": "geojson", "file": "data/2_drumuri_nationale.geojson", "geom": "line", "visible": true, "count": 14, "popup": true, "popupFields": ["Numar"], "legend": [{"label": "2_Drumuri Nationale", "g": "line", "s": {"f": "#db1e2a", "fo": 0.0, "s": "#000000", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "round", "join": "round", "ml": true}, "img": {"src": "data/symbols/2_drumuri_nationale_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#fe0000", "family": "Open Sans", "bold": true, "italic": false, "halo": "#fafafa", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "4_Tip Imbracaminte", "type": "geojson", "file": "data/4_tip_imbracaminte.geojson", "geom": "line", "visible": true, "count": 217, "popup": true, "popupFields": ["Numar", "Lungime tronson", "Tip îmbrăcăminte", "Nr. tronson", "Localitati"], "legend": [{"label": "Asfalt", "g": "line", "s": {"f": "#1fe9e9", "fo": 0.0, "s": "#1fe9e9", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/4_tip_imbracaminte_0.png", "w": 20, "h": 20}}, {"label": "Asfalt tip beton", "g": "line", "s": {"f": "#ffd000", "fo": 0.0, "s": "#ffd000", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/4_tip_imbracaminte_1.png", "w": 20, "h": 20}}, {"label": "Beton, ciment", "g": "line", "s": {"f": "#987db7", "fo": 0.0, "s": "#987db7", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/4_tip_imbracaminte_2.png", "w": 20, "h": 20}}, {"label": "Împietruit", "g": "line", "s": {"f": "#25acdb", "fo": 0.0, "s": "#25acdb", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/4_tip_imbracaminte_3.png", "w": 20, "h": 20}}, {"label": "Pământ", "g": "line", "s": {"f": "#ae7100", "fo": 0.0, "s": "#ae7100", "so": 1.0, "w": 3.78, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/4_tip_imbracaminte_4.png", "w": 20, "h": 20}}, {"label": "4_Tip Imbracaminte", "g": "line", "s": {"f": "#cf935a", "fo": 0.0, "s": "#cf935a", "so": 1.0, "w": 0.98, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/4_tip_imbracaminte_5.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "5_Administrare", "type": "geojson", "file": "data/5_administrare.geojson", "geom": "line", "visible": true, "count": 172, "popup": true, "popupFields": ["Administrator", "Act", "KM început", "KM final", "Temporar", "Termen", "Lucrare", "Condiție", "Numar", "Observatii"], "legend": [{"label": "Consiliul Județean", "g": "line", "s": {"f": "#487bb6", "fo": 0.0, "s": "#487bb6", "so": 1.0, "w": 2.49, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/5_administrare_0.png", "w": 20, "h": 20}}, {"label": "Consiliul Local", "g": "line", "s": {"f": "#faff39", "fo": 0.0, "s": "#faff39", "so": 1.0, "w": 2.49, "r": 5.0, "cap": "square", "join": "bevel"}, "img": {"src": "data/symbols/5_administrare_1.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#ffd000", "family": "Open Sans", "bold": true, "italic": true, "halo": "#1e28db", "haloW": 3.8, "max": 1500, "angled": true, "inside": true}, "cluster": false, "opacity": 1.0}, {"name": "intravilan", "type": "geojson", "file": "data/intravilan.geojson", "geom": "polygon", "visible": true, "count": 104, "popup": true, "popupFields": ["UAT_NAME"], "legend": [{"label": "intravilan", "g": "polygon", "s": {"f": "#d5d5d5", "fo": 0.3, "s": "#d5d5d5", "so": 1.0, "w": 0.98, "r": 5.0}, "img": {"src": "data/symbols/intravilan_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "limita_judet", "type": "geojson", "file": "data/limita_judet.geojson", "geom": "polygon", "visible": true, "count": 1, "popup": false, "popupFields": [], "legend": [{"label": "limita_judet", "g": "polygon", "s": {"f": "#3579b1", "fo": 0.0, "s": "#3579b1", "so": 1.0, "w": 7.56, "r": 5.0}, "img": {"src": "data/symbols/limita_judet_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": null, "cluster": false, "opacity": 1.0}, {"name": "limite_UAT", "type": "geojson", "file": "data/limite_uat.geojson", "geom": "polygon", "visible": true, "count": 104, "popup": true, "popupFields": ["NAME"], "legend": [{"label": "limite_UAT", "g": "polygon", "s": {"f": "#ffffff", "fo": 0.0, "s": "#ffffff", "so": 1.0, "w": 3.78, "r": 5.0}, "img": {"src": "data/symbols/limite_uat_0.png", "w": 20, "h": 20}}], "noLegend": false, "labels": {"size": 13.3, "color": "#00feff", "family": "Open Sans", "bold": true, "italic": true, "halo": "#d5d5d5", "haloW": 3.8, "max": 1500, "angled": false, "inside": true}, "cluster": false, "opacity": 1.0}]};
 
 proj4.defs("EPSG:3844",
   "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 +y_0=500000 +ellps=krass " +
@@ -576,6 +610,7 @@ function styleOf(feature) {
   if (out.weight === 0) out.stroke = false;
   if (s.p) { out.fillPatternDef = s.p; out.fill = true; }
   if (s.ptile) { out.fillTile = s.ptile; out.fill = true; }
+  if (!out.fillPatternDef && !out.fillTile && out.fillOpacity <= 0) out.fill = false;
   return out;
 }
 function swatch(geom, s, img) {
@@ -600,6 +635,14 @@ function swatch(geom, s, img) {
 
 /* popup ----------------------------------------------------------------- */
 const esc = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// rândul cu poziția kilometrică, deasupra atributelor
+function kmRow(info) {
+  if (!info) return "";
+  return '<div class="kmbox"><span class="kmv">' + esc(info.text) + "</span>" +
+    '<span class="kmn">' + (info.calibrated ? "kilometraj calibrat" : "măsurat pe traseu") +
+    " · la " + Math.round(info.offset) + " m de ax</span></div>";
+}
+
 function attrTable(props) {
   const rows = Object.keys(props).filter(k => k !== "_s" && k !== "_c" && k !== "_l")
     .map(k => '<tr><td class="k">' + esc(k) + '</td><td class="v">' +
@@ -637,7 +680,7 @@ function identifyBody() {
     head = "<h2>" + esc(hit.name) + "</h2>";
     if (hit.feats.length > 1) head += '<div class="idpick">' + navHtml(hit.feats.length) + "</div>";
   }
-  return '<div class="pop">' + head +
+  return '<div class="pop">' + head + kmRow(feature && feature.km) +
     attrTable((feature && feature.feature && feature.feature.properties) || {}) + "</div>";
 }
 
@@ -743,7 +786,11 @@ function visibleData(e) {
 }
 
 function refill(e) {
-  if (e.kind === "tiles") { if (e.layer && e.layer.redraw) e.layer.redraw(); return; }
+  if (e.kind === "tiles") {
+    if (e.layer && e.layer.rerenderTiles) e.layer.rerenderTiles();
+    else if (e.layer && e.layer.redraw) e.layer.redraw();
+    return;
+  }
   if (!e.raw || !e.layer) return;
   const target = e.inner || e.layer;
   target.clearLayers();
@@ -757,7 +804,8 @@ function refill(e) {
 CFG.layers.forEach((cfg, i) => {
   const e = { cfg: cfg, layer: null, raw: null, hidden: new Set(),
               kind: cfg.type === "geojson" ? "vector"
-                  : (cfg.type === "pbf" ? "tiles" : "raster") };
+                  : ((cfg.type === "pbf" || cfg.type === "pmtiles") ? "tiles"
+                                                                    : "raster") };
   entries.push(e);
 
   const box = document.createElement("div");
@@ -809,6 +857,84 @@ CFG.layers.forEach((cfg, i) => {
         { pane: pane, opacity: cfg.opacity == null ? 1 : cfg.opacity });
     }
     if (cfg.visible) add();
+  } else if (cfg.type === "pmtiles" && typeof protomapsL === "undefined") {
+    e.kind = "raster";
+    box.querySelector(".lname").insertAdjacentHTML("beforeend",
+      '<div class="lmeta">biblioteca de tile-uri nu s-a încărcat</div>');
+    console.error("protomaps-leaflet lipsește; stratul " + cfg.name + " nu poate fi desenat.");
+  } else if (cfg.type === "pmtiles") {
+    // arhivă PMTiles: se citește prin cereri Range, deci se descarcă doar
+    // porțiunea vizibilă, indiferent cât de mare e setul de date
+    e.kind = "tiles";
+    e.paneName = "tl" + i;
+    map.createPane(e.paneName);
+    map.getPane(e.paneName).style.zIndex = String(400 + entries.length - i);
+
+    const rules = [];
+    const legend = cfg.legend || [];
+    const mk = (st) => {
+      if (cfg.geom === "line") {
+        return new protomapsL.LineSymbolizer({
+          color: st.s || DEF.s, width: st.w == null ? 1 : st.w,
+          opacity: st.so == null ? 1 : st.so,
+          dash: st.d ? st.d.split(",").map(Number) : undefined });
+      }
+      if (cfg.geom === "point") {
+        return new protomapsL.CircleSymbolizer({
+          radius: st.r || 4, fill: st.f || DEF.f,
+          stroke: st.s || "#333", width: st.w == null ? 1 : st.w });
+      }
+      const fo = st.fo == null ? 0.35 : st.fo;
+      const wd = st.w == null ? 0 : st.w;
+      if (fo <= 0) {
+        // poligon fără umplere: se desenează doar conturul
+        return new protomapsL.LineSymbolizer({
+          color: st.s || DEF.s, width: Math.max(0.4, wd),
+          opacity: st.so == null ? 1 : st.so,
+          dash: st.d ? st.d.split(",").map(Number) : undefined });
+      }
+      return new protomapsL.PolygonSymbolizer({
+        fill: st.f || DEF.f, opacity: fo,
+        stroke: st.s || DEF.s, width: wd, doStroke: wd > 0 });
+    };
+    (legend.length ? legend : [{ s: DEF }]).forEach((it, k) => {
+      const st = it.s || DEF;
+      rules.push({
+        dataLayer: cfg.layerName,
+        symbolizer: mk(st),
+        filter: legend.length > 1
+          ? (z, f) => (f.props._c === undefined ? k === 0 : f.props._c === k) &&
+                      !e.hidden.has(k)
+          : (z, f) => !e.hidden.has(0)
+      });
+    });
+
+    e.layer = protomapsL.leafletLayer({
+      url: cfg.file,
+      pane: e.paneName,
+      maxDataZoom: cfg.maxZoom || 14,
+      minZoom: cfg.minZoom || 0,
+      paintRules: rules,
+      labelRules: []
+    });
+    if (cfg.popup) {
+      e.identifyPmtiles = true;
+    }
+    // sub zoom-ul minim al arhivei nu există tile-uri: se spune explicit,
+    // altfel stratul pare pur și simplu gol
+    if (cfg.minZoom) {
+      const note = document.createElement("div");
+      note.className = "lmeta";
+      const upd = () => {
+        note.textContent = map.getZoom() < cfg.minZoom
+          ? "vizibil de la zoom " + cfg.minZoom + " (acum " + Math.round(map.getZoom()) + ")"
+          : "";
+      };
+      box.querySelector(".lname").appendChild(note);
+      map.on("zoomend", upd);
+      upd();
+    }
+    if (cfg.visible) add();
   } else if (e.kind === "tiles") {
     const styles = {};
     styles[cfg.layerName] = (props, zoom) => {
@@ -845,13 +971,6 @@ CFG.layers.forEach((cfg, i) => {
   } else {
     pending++;
     e.renderer = L.canvas({ padding: 0.3 });
-    if (cfg.labels) {
-      e.labelPane = "lp" + i;
-      map.createPane(e.labelPane);
-      const lp = map.getPane(e.labelPane);
-      lp.style.zIndex = String(640 + entries.length - i);
-      lp.style.pointerEvents = "none";
-    }
     e.layer = L.geoJSON(null, {
       renderer: e.renderer,
       style: styleOf,
@@ -991,6 +1110,112 @@ function countClasses(e, box) {
   });
 }
 
+
+
+/* poziție kilometrică pe drumuri ----------------------------------------- */
+// Calculul se face în Stereo 70: proiecție metrică, deci distanțele de-a lungul
+// traseului sunt reale, nu deformate de latitudine ca în Web Mercator.
+
+function lineParts(geom) {
+  if (!geom) return null;
+  if (geom.type === "LineString") return [geom.coordinates];
+  if (geom.type === "MultiLineString") return geom.coordinates;
+  return null;
+}
+
+function toMetric(coord) {
+  try {
+    const c = proj4("EPSG:4326", "EPSG:3844", [coord[0], coord[1]]);
+    return { x: c[0], y: c[1] };
+  } catch (err) {
+    return null;
+  }
+}
+
+// proiecția punctului pe segment, cu poziția relativă t în [0,1]
+function projectOnSegment(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  if (len2 <= 0) return { x: a.x, y: a.y, t: 0, d2: (p.x - a.x) ** 2 + (p.y - a.y) ** 2 };
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const x = a.x + dx * t, y = a.y + dy * t;
+  return { x: x, y: y, t: t, d2: (p.x - x) ** 2 + (p.y - y) ** 2 };
+}
+
+// (distanța de la începutul traseului, lungimea totală, abaterea laterală)
+function measureAlong(geom, latlng) {
+  const parts = lineParts(geom);
+  if (!parts) return null;
+  const p = toMetric([latlng.lng, latlng.lat]);
+  if (!p) return null;
+
+  let total = 0, best = null, walked = 0;
+  for (const part of parts) {
+    let prev = null, prevDist = walked;
+    for (let i = 0; i < part.length; i++) {
+      const cur = toMetric(part[i]);
+      if (!cur) continue;
+      if (prev) {
+        const segLen = Math.hypot(cur.x - prev.x, cur.y - prev.y);
+        const hit = projectOnSegment(p, prev, cur);
+        if (!best || hit.d2 < best.d2) {
+          best = { d2: hit.d2, at: prevDist + segLen * hit.t };
+        }
+        prevDist += segLen;
+        total += segLen;
+      }
+      prev = cur;
+    }
+    walked = prevDist;
+  }
+  if (!best) return null;
+  return { along: best.at, total: total, offset: Math.sqrt(best.d2) };
+}
+
+function fmtKm(km) {
+  const sign = km < 0 ? "-" : "";
+  const abs = Math.abs(km);
+  const whole = Math.floor(abs);
+  const meters = Math.round((abs - whole) * 1000);
+  if (meters === 1000) return sign + (whole + 1) + "+000";
+  return sign + whole + "+" + ("00" + meters).slice(-3);
+}
+
+function kmNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = parseFloat(String(value).replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+// Poziția kilometrică a punctului de clic pe o entitate liniară.
+function kmPosition(cfg, feature, latlng) {
+  const km = cfg.km;
+  if (!km || !feature) return null;
+  const measured = measureAlong(feature.geometry, latlng);
+  if (!measured || !measured.total) return null;
+
+  const props = feature.properties || {};
+  const start = kmNumber(props[km.start]);
+  const end = kmNumber(props[km.end]);
+  let value, calibrated = false;
+
+  if (start !== null && end !== null && end !== start) {
+    // calibrare pe kilometrajul declarat: lungimea din teren diferă de cea a geometriei
+    value = start + (measured.along / measured.total) * (end - start);
+    calibrated = true;
+  } else if (start !== null) {
+    value = start + measured.along / 1000;
+  } else {
+    value = measured.along / 1000;
+  }
+  return {
+    text: "km " + fmtKm(value),
+    offset: measured.offset,
+    calibrated: calibrated,
+    length: measured.total
+  };
+}
 
 /* identificare pe toate straturile suprapuse ---------------------------- */
 // Toleranță de clic mai generoasă decât implicitul Leaflet (jumătate din grosime).
@@ -1132,6 +1357,24 @@ map.on("click", ev => {
   const pt = map.mouseEventToLayerPoint(ev.originalEvent);
   const hits = [];
   entries.forEach(e => {
+    if (e.kind === "tiles" && e.identifyPmtiles && e.identify !== false &&
+        e.layer && map.hasLayer(e.layer) && e.layer.queryFeatures) {
+      try {
+        const found = e.layer.queryFeatures(ev.latlng.lng, ev.latlng.lat,
+                                            map.getZoom(), 12);
+        const feats = [];
+        (found || []).forEach(group => {
+          (group.features || []).slice(0, MAX_PER_LAYER).forEach(hit => {
+            const props = {};
+            const raw = (hit.feature && hit.feature.props) || hit.props || {};
+            Object.keys(raw).forEach(k => { if (k !== "_c") props[k] = raw[k]; });
+            feats.push({ feature: { properties: props } });
+          });
+        });
+        if (feats.length) hits.push({ name: e.cfg.name, feats: feats });
+      } catch (err) { /* stratul nu poate fi interogat */ }
+      return;
+    }
     if (e.kind !== "vector" || e.clustered || !e.identify) return;
     if (!e.layer || !map.hasLayer(e.layer)) return;
     const feats = [];
@@ -1139,7 +1382,14 @@ map.on("click", ev => {
       if (feats.length >= MAX_PER_LAYER) return;
       try { if (l._containsPoint && l._containsPoint(pt)) feats.push(l); } catch (err) { /* ignoră */ }
     });
-    if (feats.length) hits.push({ name: e.cfg.name, feats: feats });
+    if (feats.length) {
+      if (e.cfg.km) {
+        feats.forEach(l => {
+          try { l.km = kmPosition(e.cfg, l.feature, ev.latlng); } catch (err) { l.km = null; }
+        });
+      }
+      hits.push({ name: e.cfg.name, feats: feats });
+    }
   });
   showInfo(hits, ev.latlng);
 });
@@ -1450,20 +1700,17 @@ CFG.layers.forEach((cfg, i) => {
     (s.italic ? "font-style:italic;" : "") +
     (s.family ? "font-family:'" + s.family + "',var(--ui);" : "");
   if (s.halo && s.haloW > 0) {
-    // Conturul se desenează sub glifă: rezultatul e uniform, spre deosebire de
-    // umbrele multiple, care se aglomerează la halouri groase.
-    rule += "-webkit-text-stroke:" + (s.haloW * 2) + "px " + s.halo + ";" +
-            "paint-order:stroke fill;";
-    // Browsere fără paint-order: umbre pe 12 direcții, cu rază mică.
-    const r = Math.min(2, s.haloW);
+    // Haloul se face din umbre pe 12 direcții: rămân sub glifă în orice browser.
+    // (text-stroke ar fi mai uniform, dar se desenează peste literă acolo unde
+    // paint-order nu se aplică textului HTML, făcând eticheta ilizibilă.)
+    const r = Math.max(0.5, Math.min(2.5, s.haloW));
     const ring = [];
     for (let a = 0; a < 12; a++) {
       const t = a * Math.PI / 6;
       ring.push((Math.cos(t) * r).toFixed(2) + "px " + (Math.sin(t) * r).toFixed(2) +
                 "px 0 " + s.halo);
     }
-    labelFallback.push("@supports not (paint-order: stroke){.lb" + i +
-      "{-webkit-text-stroke:0;text-shadow:" + ring.join(",") + "}}");
+    rule += "text-shadow:" + ring.join(",") + ";";
   }
   labelCss.push(rule + "}");
 });
@@ -1644,8 +1891,7 @@ function updateLabels() {
             (angle ? ' style="transform:rotate(' + angle + 'deg)"' : "") + ">" +
             esc(text) + "</span>";
           l._tt = L.tooltip({ permanent: true, direction: "center", opacity: 1,
-            interactive: false, className: "maplabel lb" + i,
-            pane: e.labelPane || "tooltipPane" })
+            interactive: false, className: "maplabel lb" + i })
             .setLatLng(at).setContent(inner);
           l._at = at;
         }
@@ -1662,6 +1908,13 @@ function updateLabels() {
     e.labelled = true;
     e.activeLabels = active;
     clipLabels(e, i);
+    if (!e.labelReport && active.length) {
+      e.labelReport = true;
+      const el = active[0].getElement && active[0].getElement();
+      const visible = el && el.offsetWidth > 0;
+      console.info("Etichete „" + e.cfg.name + "”: " + active.length +
+        " afișate" + (visible ? "" : " (elementul are lățime zero — verificați stilul)"));
+    }
   });
 }
 map.on("zoomend viewreset", () => {
@@ -1999,12 +2252,880 @@ function fmtST70(lat, lng) {
   return "X " + f(c.x) + "  Y " + f(c.y);
 }
 
-function scaleText() {
-  // scara aproximativă la latitudinea centrului, pentru o coală tipărită la 96 dpi
+// La tipărire, un pixel CSS este 1/96 inch. Pragurile de scară ale etichetelor
+// folosesc convenția OGC (0,28 mm/px), deci cele două calcule sunt separate.
+const PX_PER_M = 96 / 0.0254;
+
+function zoomForPrintScale(denominator) {
   const lat = map.getCenter().lat;
-  const mPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, map.getZoom());
-  const denom = Math.round(mPerPx * 96 / 0.0254);
-  return "1 : " + denom.toLocaleString("ro-RO");
+  return Math.log2(156543.03392 * Math.cos(lat * Math.PI / 180) * PX_PER_M / denominator);
+}
+
+function scaleText(m, factor) {
+  // scara la latitudinea centrului, raportată la pixelul de coală (96 dpi)
+  const src = m || map;
+  const lat = src.getCenter().lat;
+  const mpp = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, src.getZoom());
+  const denom = Math.round(mpp * PX_PER_M * (factor || 1));
+  const round = denom > 2000 ? 500 : (denom > 500 ? 50 : 10);
+  const nice = Math.round(denom / round) * round;
+  return "1 : " + (Math.abs(nice - denom) / denom < 0.02 ? nice : denom)
+    .toLocaleString("ro-RO");
+}
+
+
+
+/* ====================================================================== */
+/* Generator PDF vectorial, fără dependențe                                */
+/* Geometriile se proiectează în Stereo 70 și se așază pe pagină la scara  */
+/* aleasă, deci planul rezultat este metric, cu text selectabil.           */
+/* ====================================================================== */
+
+const PT = 72 / 25.4;            // puncte PDF per milimetru
+const PAGE_MM = { a4l: [297, 210], a4p: [210, 297], a3l: [420, 297], a3p: [297, 420] };
+
+// â și î există în WinAnsiEncoding; ă, ș, ț nu există în fonturile PDF de bază,
+// așa că se scriu ca literă simplă peste care se desenează semnul, vectorial.
+const RO_BASE = { "ă": "a", "Ă": "A", "ș": "s", "Ș": "S", "ț": "t", "Ț": "T",
+                  "ş": "s", "Ş": "S", "ţ": "t", "Ţ": "T" };
+const RO_MARK = { "ă": "breve", "Ă": "breve", "ș": "comma", "Ș": "comma",
+                  "ț": "comma", "Ț": "comma", "ş": "comma", "Ş": "comma",
+                  "ţ": "comma", "Ţ": "comma" };
+// caractere tipografice uzuale, la pozițiile lor din WinAnsiEncoding
+const WINANSI = { "—": 0x97, "–": 0x96, "’": 0x92, "‘": 0x91, "“": 0x93, "”": 0x94,
+                  "„": 0x84, "…": 0x85, "•": 0x95, "·": 0xB7, "°": 0xB0, "″": 0x94,
+                  "×": 0xD7, "±": 0xB1, "€": 0x80, "™": 0x99, "©": 0xA9 };
+
+function pdfText(str) {
+  let out = "";
+  for (const raw of String(str)) {
+    const ch = RO_BASE[raw] || raw;
+    const code = WINANSI[ch] !== undefined ? WINANSI[ch] : ch.charCodeAt(0);
+    if (code > 255) { out += "-"; continue; }
+    if (ch === "(" || ch === ")" || ch === "\\") out += "\\" + ch;
+    else if (code < 32 || code > 126) out += "\\" + ("000" + code.toString(8)).slice(-3);
+    else out += ch;
+  }
+  return out;
+}
+
+function hexToRgb(hex) {
+  const h = (hex || "#000000").replace("#", "");
+  const v = h.length === 3 ? h.split("").map(c => c + c).join("") : h;
+  const n = parseInt(v, 16);
+  if (isNaN(n)) return [0, 0, 0];
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+
+// lățimile glifelor Helvetica (AFM), în miimi de em
+const PdfDocWidths = {
+  regular: {32:278,33:278,34:355,35:556,36:556,37:889,38:667,39:191,40:333,41:333,42:389,43:584,44:278,45:333,46:278,47:278,48:556,49:556,50:556,51:556,52:556,53:556,54:556,55:556,56:556,57:556,58:278,59:278,60:584,61:584,62:584,63:556,64:1015,65:667,66:667,67:722,68:722,69:667,70:611,71:778,72:722,73:278,74:500,75:667,76:556,77:833,78:722,79:778,80:667,81:778,82:722,83:667,84:611,85:722,86:667,87:944,88:667,89:667,90:611,91:278,92:278,93:278,94:469,95:556,96:333,97:556,98:556,99:500,100:556,101:556,102:278,103:556,104:556,105:222,106:222,107:500,108:222,109:833,110:556,111:556,112:556,113:556,114:333,115:500,116:278,117:556,118:500,119:722,120:500,121:500,122:500,123:334,124:260,125:334,126:584,183:350,194:667,206:278,226:556,238:278,128:556,132:333,133:1000,145:222,146:222,147:333,148:333,149:350,150:556,151:1000,153:1000,169:737,176:400,177:584,215:584},
+  bold: {32:278,33:333,34:474,35:556,36:556,37:889,38:722,39:238,40:333,41:333,42:389,43:584,44:278,45:333,46:278,47:278,48:556,49:556,50:556,51:556,52:556,53:556,54:556,55:556,56:556,57:556,58:333,59:333,60:584,61:584,62:584,63:611,64:975,65:722,66:722,67:722,68:722,69:667,70:611,71:778,72:722,73:278,74:556,75:722,76:611,77:833,78:722,79:778,80:667,81:778,82:722,83:667,84:611,85:722,86:667,87:944,88:667,89:667,90:611,91:333,92:278,93:333,94:584,95:556,96:333,97:556,98:611,99:556,100:611,101:556,102:333,103:611,104:611,105:278,106:278,107:556,108:278,109:889,110:611,111:611,112:611,113:611,114:389,115:556,116:333,117:611,118:556,119:778,120:556,121:556,122:500,123:389,124:280,125:389,126:584,183:350,194:722,206:278,226:556,238:278,128:556,132:500,133:1000,145:278,146:278,147:500,148:500,149:350,150:556,151:1000,153:1000,169:737,176:400,177:584,215:584}
+};
+
+function num(v) {
+  return (Math.round(v * 100) / 100).toString();
+}
+
+class PdfDoc {
+  constructor(widthMm, heightMm) {
+    this.w = widthMm * PT;
+    this.h = heightMm * PT;
+    this.ops = [];
+    this.alphas = {};          // stări de transparență, adăugate la nevoie
+  }
+  // sistemul PDF are originea jos-stânga; se lucrează cu y de sus în jos
+  y(v) { return this.h - v; }
+
+  push(s) { this.ops.push(s); }
+  save() { this.push("q"); }
+  restore() { this.push("Q"); }
+
+  alpha(fill, stroke) {
+    const key = "a" + Math.round(fill * 100) + "_" + Math.round(stroke * 100);
+    this.alphas[key] = { ca: fill, CA: stroke };
+    this.push("/" + key + " gs");
+  }
+  fillColor(hex) { const c = hexToRgb(hex); this.push(num(c[0]) + " " + num(c[1]) + " " + num(c[2]) + " rg"); }
+  strokeColor(hex) { const c = hexToRgb(hex); this.push(num(c[0]) + " " + num(c[1]) + " " + num(c[2]) + " RG"); }
+  lineWidth(w) { this.push(num(Math.max(0.05, w)) + " w"); }
+  dash(pattern) {
+    if (!pattern) { this.push("[] 0 d"); return; }
+    const arr = String(pattern).split(",").map(v => num(parseFloat(v) * 0.75));
+    this.push("[" + arr.join(" ") + "] 0 d");
+  }
+  rect(x, y, w, h) { this.push(num(x) + " " + num(this.y(y + h)) + " " + num(w) + " " + num(h) + " re"); }
+  moveTo(x, y) { this.push(num(x) + " " + num(this.y(y)) + " m"); }
+  lineTo(x, y) { this.push(num(x) + " " + num(this.y(y)) + " l"); }
+  close() { this.push("h"); }
+  circle(x, y, r) {
+    const k = 0.5523 * r, cy = this.y(y);
+    this.push(num(x + r) + " " + num(cy) + " m");
+    this.push([num(x + r), num(cy + k), num(x + k), num(cy + r), num(x), num(cy + r), "c"].join(" "));
+    this.push([num(x - k), num(cy + r), num(x - r), num(cy + k), num(x - r), num(cy), "c"].join(" "));
+    this.push([num(x - r), num(cy - k), num(x - k), num(cy - r), num(x), num(cy - r), "c"].join(" "));
+    this.push([num(x + k), num(cy - r), num(x + r), num(cy - k), num(x + r), num(cy), "c"].join(" "));
+  }
+  // lățimile reale ale glifelor Helvetica, pentru poziționarea semnelor
+  charWidth(ch, size, bold) {
+    const W = bold ? PdfDocWidths.bold : PdfDocWidths.regular;
+    const base = RO_BASE[ch] || ch;
+    const code = WINANSI[base] !== undefined ? WINANSI[base] : base.charCodeAt(0);
+    const w = W[code];
+    return (w === undefined ? 556 : w) / 1000 * size;
+  }
+
+  // semnele care lipsesc din fonturile de bază, desenate ca vectori
+  drawMark(kind, x, y, size, color, upper) {
+    this.save();
+    this.strokeColor(color || "#000000");
+    this.lineWidth(Math.max(0.25, size * 0.055));
+    if (kind === "breve") {
+      // deasupra majusculei semnul trebuie ridicat peste înălțimea literei
+      const w = size * (upper ? 0.34 : 0.30);
+      const top = y - size * (upper ? 0.80 : 0.70);
+      const d = size * 0.10;
+      this.moveTo(x - w / 2, top);
+      this.push(num(x - w / 2) + " " + num(this.y(top + d * 1.7)) + " " +
+                num(x + w / 2) + " " + num(this.y(top + d * 1.7)) + " " +
+                num(x + w / 2) + " " + num(this.y(top)) + " c");
+      this.push("S");
+    } else {
+      // virgulă sub literă, lipită de linia de bază
+      const base = y + size * 0.06;
+      this.lineWidth(Math.max(0.22, size * 0.062));
+      this.moveTo(x + size * 0.035, base);
+      this.lineTo(x - size * 0.02, base + size * 0.155);
+      this.push("S");
+    }
+    this.restore();
+  }
+
+  text(str, x, y, size, opts) {
+    const o = opts || {};
+    const font = o.bold ? "/F2" : "/F1";
+    this.save();
+    this.fillColor(o.color || "#000000");
+    this.push("BT");
+    if (o.angle) {
+      const a = o.angle * Math.PI / 180, cos = Math.cos(a), sin = Math.sin(a);
+      this.push(font + " " + num(size) + " Tf");
+      this.push([num(cos), num(sin), num(-sin), num(cos), num(x), num(this.y(y))].join(" ") + " Tm");
+    } else {
+      this.push(font + " " + num(size) + " Tf");
+      this.push(num(x) + " " + num(this.y(y)) + " Td");
+    }
+    this.push("(" + pdfText(str) + ") Tj");
+    this.push("ET");
+    this.restore();
+
+    // semnele diacritice, poziționate peste literele deja scrise
+    const text = String(str);
+    let hasMarks = false;
+    for (const ch of text) { if (RO_MARK[ch]) { hasMarks = true; break; } }
+    if (!hasMarks || o.angle) return;
+    let cursor = x;
+    for (const ch of text) {
+      const w = this.charWidth(ch, size, o.bold);
+      if (RO_MARK[ch]) {
+        this.drawMark(RO_MARK[ch], cursor + w / 2, y, size, o.color || "#000000",
+                      ch === ch.toUpperCase());
+      }
+      cursor += w;
+    }
+  }
+  widthOf(str, size, bold) {
+    let total = 0;
+    for (const ch of String(str)) total += this.charWidth(ch, size, bold);
+    return total;
+  }
+
+  build() {
+    const content = this.ops.join("\n");
+    const objs = [];
+    const extg = Object.keys(this.alphas).map(k =>
+      "/" + k + " << /Type /ExtGState /ca " + this.alphas[k].ca +
+      " /CA " + this.alphas[k].CA + " >>").join(" ");
+
+    objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+    objs[2] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
+    objs[3] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + num(this.w) + " " + num(this.h) +
+      "] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> /ExtGState << " + extg +
+      " >> >> /Contents 4 0 R >>";
+    objs[4] = "<< /Length " + content.length + " >>\nstream\n" + content + "\nendstream";
+    objs[5] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica " +
+      "/Encoding /WinAnsiEncoding >>";
+    objs[6] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold " +
+      "/Encoding /WinAnsiEncoding >>";
+
+    let pdf = "%PDF-1.4\n";
+    const offsets = [];
+    for (let i = 1; i < objs.length; i++) {
+      offsets[i] = pdf.length;
+      pdf += i + " 0 obj\n" + objs[i] + "\nendobj\n";
+    }
+    const xref = pdf.length;
+    pdf += "xref\n0 " + objs.length + "\n0000000000 65535 f \n";
+    for (let i = 1; i < objs.length; i++) {
+      pdf += ("0000000000" + offsets[i]).slice(-10) + " 00000 n \n";
+    }
+    pdf += "trailer\n<< /Size " + objs.length + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF";
+    return pdf;
+  }
+}
+
+/* desenarea planului în PDF ---------------------------------------------- */
+
+function buildPdf() {
+  const sizeKey = document.getElementById("psize").value;
+  const dims = PAGE_MM[sizeKey] || PAGE_MM.a4l;
+  const useST70 = document.getElementById("pcrs").value === "st70";
+  const withLegend = document.getElementById("pleg").checked;
+  const withGrid = document.getElementById("pgrid").checked;
+  const withScale = document.getElementById("pscale").checked;
+  const scopeVisible = document.getElementById("pscope").value === "view";
+  const scaleMode = document.getElementById("pscale2").value;
+
+  const doc = new PdfDoc(dims[0], dims[1]);
+  const M = 10 * PT;                       // marginea colii
+  const headH = 14 * PT, footH = 7 * PT;
+  const legendW = withLegend ? 46 * PT : 0;
+  const frame = withGrid ? 7 * PT : 0;
+
+  const area = { x: M, y: M + headH, w: doc.w - 2 * M - legendW,
+                 h: doc.h - 2 * M - headH - footH };
+  const inner = { x: area.x + frame, y: area.y + frame,
+                  w: area.w - 2 * frame, h: area.h - 2 * frame };
+
+  // --- sistemul de coordonate al planului --------------------------------
+  const view = scopeVisible ? map.getBounds() : bounds;
+  const project = useST70
+    ? (lat, lng) => { const c = toST70(lat, lng); return { x: c.e, y: c.n }; }
+    : (lat, lng) => { const p = L.CRS.EPSG3857.project(L.latLng(lat, lng));
+                      return { x: p.x, y: p.y }; };
+
+  const corners = [
+    project(view.getSouth(), view.getWest()), project(view.getSouth(), view.getEast()),
+    project(view.getNorth(), view.getWest()), project(view.getNorth(), view.getEast())
+  ];
+  let minX = Math.min.apply(null, corners.map(c => c.x));
+  let maxX = Math.max.apply(null, corners.map(c => c.x));
+  let minY = Math.min.apply(null, corners.map(c => c.y));
+  let maxY = Math.max.apply(null, corners.map(c => c.y));
+
+  const mmPerUnit = 1000;   // metri → mm
+  let scale;                // numitorul scării
+  if (scaleMode === "fit" || scaleMode === "width") {
+    const sx = (maxX - minX) * mmPerUnit * PT / inner.w;
+    const sy = (maxY - minY) * mmPerUnit * PT / inner.h;
+    scale = scaleMode === "width" ? sx : Math.max(sx, sy);
+  } else {
+    scale = parseFloat(scaleMode);
+  }
+  // scări rotunde pentru varianta automată
+  if (scaleMode === "fit" || scaleMode === "width") {
+    const nice = [100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000,
+                  50000, 100000, 200000, 500000];
+    for (let i = 0; i < nice.length; i++) {
+      if (nice[i] >= scale) { scale = nice[i]; break; }
+    }
+  }
+  const unitToPt = mmPerUnit * PT / scale;   // o unitate de proiecție în puncte
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const toPage = (p) => ({
+    x: inner.x + inner.w / 2 + (p.x - cx) * unitToPt,
+    y: inner.y + inner.h / 2 - (p.y - cy) * unitToPt
+  });
+  const pageOf = (lat, lng) => toPage(project(lat, lng));
+
+  // limitele reale ale cadrului, în unități de proiecție
+  const halfW = inner.w / 2 / unitToPt, halfH = inner.h / 2 / unitToPt;
+  const box = { minX: cx - halfW, maxX: cx + halfW, minY: cy - halfH, maxY: cy + halfH };
+
+  // --- conținutul hărții --------------------------------------------------
+  doc.save();
+  doc.rect(inner.x, inner.y, inner.w, inner.h);
+  doc.push("W n");                     // decupare la cadrul planului
+
+  const drawn = [];
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (!e.layer || !map.hasLayer(e.layer)) continue;
+    if (e.kind !== "vector" || !e.raw) {
+      if (e.kind === "tiles" || e.cfg.type === "image" || e.cfg.type === "xyz" ||
+          e.cfg.type === "wms") drawn.push(e.cfg.name);
+      continue;
+    }
+    const data = visibleData(e);
+    if (!data || !data.features.length) continue;
+    data.features.forEach(f => drawFeaturePdf(doc, f, e, pageOf, unitToPt));
+  }
+
+  // etichetele, deasupra geometriilor
+  entries.forEach((e, i) => {
+    if (!e.cfg.labels || e.kind !== "vector" || !e.raw) return;
+    if (!e.layer || !map.hasLayer(e.layer)) return;
+    const st = e.cfg.labels;
+    const data = visibleData(e);
+    if (!data) return;
+    let count = 0;
+    data.features.forEach(f => {
+      const props = f.properties || {};
+      if (!props._l || !props._p || count > 4000) return;
+      const p = project(props._p[0], props._p[1]);
+      if (p.x < box.minX || p.x > box.maxX || p.y < box.minY || p.y > box.maxY) return;
+      const at = toPage(p);
+      const size = Math.max(4, (st.size || 11) * 0.62);
+      const w = doc.widthOf(props._l, size, st.bold);
+      count++;
+      doc.text(props._l, at.x - w / 2, at.y + size * 0.35, size,
+        { color: st.color || "#111111", bold: st.bold,
+          angle: st.angled && props._a ? -props._a : 0 });
+    });
+  });
+  doc.restore();
+
+  // conturul planului
+  doc.strokeColor("#000000");
+  doc.lineWidth(0.8);
+  doc.rect(inner.x, inner.y, inner.w, inner.h);
+  doc.push("S");
+
+  if (withGrid) drawPdfFrame(doc, inner, frame, box, scale, useST70, project, toPage);
+  drawPdfHeader(doc, M, headH, footH, scale, useST70, withScale, box, project);
+  if (withLegend) {
+    drawPdfLegend(doc, doc.w - M - legendW + 4 * PT, area.y, legendW - 4 * PT,
+                  area.h, scopeVisible);
+  }
+  return { doc: doc, scale: scale, raster: drawn };
+}
+
+/* geometrii ------------------------------------------------------------- */
+
+function ringToPath(doc, ring, pageOf) {
+  for (let i = 0; i < ring.length; i++) {
+    const p = pageOf(ring[i][1], ring[i][0]);
+    if (i === 0) doc.moveTo(p.x, p.y); else doc.lineTo(p.x, p.y);
+  }
+  doc.close();
+}
+
+function polyPath(doc, coords, pageOf) {
+  coords.forEach(ring => ringToPath(doc, ring, pageOf));
+}
+
+// hașura se desenează ca linii reale, decupate la poligon: rămâne vectorială
+function hatchPdf(doc, coords, pageOf, pattern, unitToPt) {
+  const pts = [];
+  coords.forEach(ring => ring.forEach(c => pts.push(pageOf(c[1], c[0]))));
+  if (!pts.length) return;
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+  const y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+
+  doc.save();
+  polyPath(doc, coords, pageOf);
+  doc.push("W n");
+  doc.strokeColor(pattern.color || "#333333");
+  doc.lineWidth((pattern.widthM ? pattern.widthM * unitToPt : (pattern.width || 1) * 0.75));
+  doc.dash(pattern.dash);
+
+  if (pattern.kind === "dots") {
+    const dx = Math.max(2, pattern.dxM ? pattern.dxM * unitToPt : pattern.dx * 0.75);
+    const dy = Math.max(2, pattern.dyM ? pattern.dyM * unitToPt : pattern.dy * 0.75);
+    doc.fillColor(pattern.color || "#333333");
+    let n = 0;
+    for (let x = x0; x <= x1 && n < 20000; x += dx) {
+      for (let y = y0; y <= y1 && n < 20000; y += dy) {
+        doc.circle(x, y, Math.max(0.3, (pattern.radius || 1) * 0.75));
+        doc.push("f");
+        n++;
+      }
+    }
+  } else {
+    const gap = Math.max(1.2, pattern.gapM ? pattern.gapM * unitToPt : pattern.gap * 0.75);
+    const a = (pattern.angle || 0) * Math.PI / 180;
+    const dx = Math.cos(a), dy = -Math.sin(a);
+    const diag = Math.hypot(x1 - x0, y1 - y0);
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    const steps = Math.min(4000, Math.ceil(diag / gap) + 2);
+    for (let k = -steps; k <= steps; k++) {
+      const ox = -dy * k * gap, oy = dx * k * gap;
+      doc.moveTo(mx + ox - dx * diag, my + oy - dy * diag);
+      doc.lineTo(mx + ox + dx * diag, my + oy + dy * diag);
+      doc.push("S");
+    }
+  }
+  doc.restore();
+}
+
+function drawFeaturePdf(doc, feature, entry, pageOf, unitToPt) {
+  const geom = feature.geometry;
+  if (!geom) return;
+  const s = (feature.properties && feature.properties._s) || DEF;
+  const weight = s.wM ? s.wM * unitToPt : (s.w == null ? 1 : s.w) * 0.75;
+  const fillOp = s.fo == null ? 0.35 : s.fo;
+  const strokeOp = s.so == null ? 1 : s.so;
+
+  const polys = geom.type === "Polygon" ? [geom.coordinates]
+              : (geom.type === "MultiPolygon" ? geom.coordinates : null);
+  if (polys) {
+    polys.forEach(coords => {
+      if (fillOp > 0) {
+        doc.save();
+        doc.alpha(fillOp, strokeOp);
+        doc.fillColor(s.f || DEF.f);
+        polyPath(doc, coords, pageOf);
+        doc.push("f*");
+        doc.restore();
+      }
+      if (s.p) {
+        doc.save();
+        doc.alpha(strokeOp, strokeOp);
+        hatchPdf(doc, coords, pageOf, s.p, unitToPt);
+        doc.restore();
+      }
+      if (weight > 0 && strokeOp > 0) {
+        doc.save();
+        doc.alpha(strokeOp, strokeOp);
+        doc.strokeColor(s.s || DEF.s);
+        doc.lineWidth(weight);
+        doc.dash(s.d);
+        polyPath(doc, coords, pageOf);
+        doc.push("S");
+        doc.restore();
+      }
+    });
+    return;
+  }
+
+  const lines = geom.type === "LineString" ? [geom.coordinates]
+              : (geom.type === "MultiLineString" ? geom.coordinates : null);
+  if (lines) {
+    doc.save();
+    doc.alpha(strokeOp, strokeOp);
+    doc.strokeColor(s.s || DEF.s);
+    doc.lineWidth(Math.max(0.15, weight));
+    doc.dash(s.d);
+    if (s.cap) doc.push({ butt: "0 J", round: "1 J", square: "2 J" }[s.cap] || "1 J");
+    if (s.join) doc.push({ miter: "0 j", round: "1 j", bevel: "2 j" }[s.join] || "1 j");
+    lines.forEach(line => {
+      line.forEach((c, i) => {
+        const p = pageOf(c[1], c[0]);
+        if (i === 0) doc.moveTo(p.x, p.y); else doc.lineTo(p.x, p.y);
+      });
+      doc.push("S");
+    });
+    doc.restore();
+    return;
+  }
+
+  const points = geom.type === "Point" ? [geom.coordinates]
+               : (geom.type === "MultiPoint" ? geom.coordinates : null);
+  if (points) {
+    const r = Math.max(0.6, s.rM ? s.rM * unitToPt : (s.r || 4) * 0.75);
+    doc.save();
+    doc.alpha(fillOp || 1, strokeOp);
+    doc.fillColor(s.f || DEF.f);
+    doc.strokeColor(s.s || "#333333");
+    doc.lineWidth(Math.max(0.15, weight));
+    points.forEach(c => {
+      const p = pageOf(c[1], c[0]);
+      doc.circle(p.x, p.y, r);
+      doc.push(weight > 0 ? "B" : "f");
+    });
+    doc.restore();
+  }
+}
+
+/* cadru, antet și legendă în PDF ----------------------------------------- */
+
+function drawPdfFrame(doc, inner, frame, box, scale, useST70, project, toPage) {
+  const spanX = box.maxX - box.minX, spanY = box.maxY - box.minY;
+  const step = Math.max(niceStep(spanX, 6), niceStep(spanY, 5));
+  const band = frame * 0.6;
+  const fs = 5.4;
+
+  const xs = [], ys = [];
+  for (let v = Math.ceil(box.minX / step) * step; v <= box.maxX; v += step) xs.push(v);
+  for (let v = Math.ceil(box.minY / step) * step; v <= box.maxY; v += step) ys.push(v);
+
+  function zebra(marks, start, end, horizontal, offset) {
+    const stops = [start].concat(marks).concat([end]);
+    for (let i = 0; i < stops.length - 1; i++) {
+      const a = stops[i], b = stops[i + 1];
+      if (b - a <= 0) continue;
+      const p0 = horizontal
+        ? toPage({ x: a, y: box.maxY }).x : toPage({ x: box.minX, y: b }).y;
+      const p1 = horizontal
+        ? toPage({ x: b, y: box.maxY }).x : toPage({ x: box.minX, y: a }).y;
+      const lo = Math.min(p0, p1), hi = Math.max(p0, p1);
+      doc.fillColor(i % 2 ? "#000000" : "#ffffff");
+      doc.strokeColor("#000000");
+      doc.lineWidth(0.35);
+      if (horizontal) doc.rect(lo, offset, hi - lo, band);
+      else doc.rect(offset, lo, band, hi - lo);
+      doc.push("B");
+    }
+  }
+  zebra(xs, box.minX, box.maxX, true, inner.y - band);
+  zebra(xs, box.minX, box.maxX, true, inner.y + inner.h);
+  zebra(ys, box.minY, box.maxY, false, inner.x - band);
+  zebra(ys, box.minY, box.maxY, false, inner.x + inner.w);
+
+  // grila interioară
+  doc.save();
+  doc.rect(inner.x, inner.y, inner.w, inner.h);
+  doc.push("W n");
+  doc.strokeColor("#000000");
+  doc.lineWidth(0.25);
+  doc.dash("2,5");
+  doc.alpha(1, 0.45);
+  xs.forEach(v => {
+    const p = toPage({ x: v, y: box.maxY });
+    doc.moveTo(p.x, inner.y);
+    doc.lineTo(p.x, inner.y + inner.h);
+    doc.push("S");
+  });
+  ys.forEach(v => {
+    const p = toPage({ x: box.minX, y: v });
+    doc.moveTo(inner.x, p.y);
+    doc.lineTo(inner.x + inner.w, p.y);
+    doc.push("S");
+  });
+  doc.restore();
+
+  const fmt = v => fmtGrid(v, step);
+  xs.forEach(v => {
+    const p = toPage({ x: v, y: box.maxY });
+    const w = doc.widthOf(fmt(v), fs);
+    doc.text(fmt(v), p.x - w / 2, inner.y - band - 2, fs);
+    doc.text(fmt(v), p.x - w / 2, inner.y + inner.h + band + fs + 1, fs);
+  });
+  ys.forEach(v => {
+    const p = toPage({ x: box.minX, y: v });
+    const w = doc.widthOf(fmt(v), fs);
+    doc.text(fmt(v), inner.x - band - 2, p.y + w / 2, fs, { angle: 90 });
+    doc.text(fmt(v), inner.x + inner.w + band + fs, p.y - w / 2, fs, { angle: -90 });
+  });
+
+  const note = "interval " + fmt(step) + (useST70 ? " m · Stereo 70" : "° · WGS84");
+  doc.text(note, inner.x + inner.w - doc.widthOf(note, 5) ,
+           inner.y + inner.h + band + fs * 2 + 4, 5, { color: "#555555" });
+}
+
+function drawPdfHeader(doc, M, headH, footH, scale, useST70, withScale, box, project) {
+  const title = document.getElementById("ptitle").value || CFG.title || "Hartă";
+  const sub = document.getElementById("psub").value || "";
+  doc.text(title, M, M + 10, 13, { bold: true });
+
+  const right = doc.w - M;
+  let line = M + 6;
+  if (sub) {
+    doc.text(sub, right - doc.widthOf(sub, 7.5), line, 7.5, { color: "#444444" });
+    line += 9;
+  }
+  if (withScale) {
+    const st = "Scara 1 : " + scale.toLocaleString("ro-RO");
+    doc.text(st, right - doc.widthOf(st, 7.5), line, 7.5, { bold: true });
+    line += 9;
+    const crs = useST70 ? "Stereo 70 (EPSG:3844)" : "WGS84 (EPSG:4326)";
+    doc.text(crs, right - doc.widthOf(crs, 6.5), line, 6.5, { color: "#555555" });
+  }
+  doc.strokeColor("#000000");
+  doc.lineWidth(1);
+  doc.moveTo(M, M + headH - 4);
+  doc.lineTo(doc.w - M, M + headH - 4);
+  doc.push("S");
+
+  const y = doc.h - M - 1;
+  doc.strokeColor("#999999");
+  doc.lineWidth(0.4);
+  doc.moveTo(M, y - 9);
+  doc.lineTo(doc.w - M, y - 9);
+  doc.push("S");
+
+  let coords = "";
+  if (withScale) {
+    const f = v => v.toLocaleString("ro-RO", { maximumFractionDigits: useST70 ? 1 : 5 });
+    coords = useST70
+      ? "SV: X " + f(box.minY) + "  Y " + f(box.minX) +
+        "     NE: X " + f(box.maxY) + "  Y " + f(box.maxX)
+      : "SV: " + f(box.minY) + ", " + f(box.minX) +
+        "     NE: " + f(box.maxY) + ", " + f(box.maxX);
+  }
+  doc.text(coords, M, y - 1, 6, { color: "#555555" });
+  const date = new Date().toLocaleString("ro-RO");
+  doc.text(date, doc.w - M - doc.widthOf(date, 6), y - 1, 6, { color: "#555555" });
+}
+
+function drawPdfLegend(doc, x, y, w, h, scopeVisibleOnly) {
+  doc.text("LEGENDĂ", x, y + 8, 7.5, { bold: true });
+  doc.strokeColor("#000000");
+  doc.lineWidth(0.5);
+  doc.moveTo(x, y + 11);
+  doc.lineTo(x + w, y + 11);
+  doc.push("S");
+
+  let cy = y + 21;
+  const sw = 13, sh = 7;
+  entries.forEach(e => {
+    const cfg = e.cfg;
+    if (cfg.noLegend) return;
+    if (scopeVisibleOnly && (!cfg.visible || (e.layer && !map.hasLayer(e.layer)))) return;
+    if (cy > y + h - 12) return;
+    const legend = cfg.legend || [];
+
+    if (legend.length > 1) {
+      doc.text(cfg.name, x, cy, 6.6, { bold: true });
+      cy += 8;
+    }
+    const items = legend.length ? legend : [{ s: DEF, g: cfg.geom, label: cfg.name }];
+    items.forEach((it, k) => {
+      if (legend.length > 1 && e.hidden.has(k)) return;
+      if (cy > y + h - 8) return;
+      const st = it.s || DEF;
+      const label = legend.length > 1 ? it.label : cfg.name;
+      const geom = it.g || cfg.geom;
+
+      doc.save();
+      if (geom === "line") {
+        doc.strokeColor(st.s || DEF.s);
+        doc.lineWidth(Math.max(0.4, (st.w || 1) * 0.75));
+        doc.dash(st.d);
+        doc.moveTo(x, cy - 2);
+        doc.lineTo(x + sw, cy - 2);
+        doc.push("S");
+      } else if (geom === "point") {
+        doc.fillColor(st.f || DEF.f);
+        doc.strokeColor(st.s || "#333333");
+        doc.lineWidth(0.4);
+        doc.circle(x + sw / 2, cy - 2, Math.min(3, st.r || 2.5));
+        doc.push("B");
+      } else {
+        if ((st.fo == null ? 0.35 : st.fo) > 0) {
+          doc.alpha(st.fo == null ? 0.35 : st.fo, 1);
+          doc.fillColor(st.f || DEF.f);
+          doc.rect(x, cy - sh + 1, sw, sh);
+          doc.push("f");
+        }
+        if (st.p) {
+          const ring = [[[0, 0]]];   // dreptunghiul de mostră, în coordonate de pagină
+          doc.save();
+          doc.rect(x, cy - sh + 1, sw, sh);
+          doc.push("W n");
+          doc.strokeColor(st.p.color || "#333333");
+          doc.lineWidth(0.4);
+          const a = (st.p.angle || 0) * Math.PI / 180;
+          const dx = Math.cos(a), dy = -Math.sin(a);
+          for (let k2 = -6; k2 <= 6; k2++) {
+            doc.moveTo(x + sw / 2 - dy * k2 * 2.2 - dx * sw, cy - 2 + dx * k2 * 2.2 - dy * sw);
+            doc.lineTo(x + sw / 2 - dy * k2 * 2.2 + dx * sw, cy - 2 + dx * k2 * 2.2 + dy * sw);
+            doc.push("S");
+          }
+          doc.restore();
+        }
+        doc.alpha(1, 1);
+        doc.strokeColor(st.s || DEF.s);
+        doc.lineWidth(Math.max(0.3, Math.min(1.2, (st.w || 0.5) * 0.75)));
+        doc.rect(x, cy - sh + 1, sw, sh);
+        doc.push("S");
+      }
+      doc.restore();
+
+      const maxChars = Math.floor((w - sw - 4) / (6 * 0.5));
+      const text = label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label;
+      doc.text(text, x + sw + 4, cy, 6);
+      cy += 10;
+    });
+    cy += 4;
+  });
+}
+
+function savePdf() {
+  let result;
+  try {
+    result = buildPdf();
+  } catch (err) {
+    alert("Generarea PDF a eșuat: " + err.message);
+    return;
+  }
+  const bytes = result.doc.build();
+  const buf = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i) & 0xff;
+  const url = URL.createObjectURL(new Blob([buf], { type: "application/pdf" }));
+  const a = document.createElement("a");
+  a.href = url;
+  const name = (document.getElementById("ptitle").value || CFG.title || "harta")
+    .replace(/[^\w\-]+/g, "_");
+  a.download = name + "_1-" + result.scale + ".pdf";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  closePrint();
+  if (result.raster.length) {
+    setTimeout(() => alert("PDF-ul conține doar straturile vectoriale. Straturile " +
+      "raster sau în tile-uri (" + result.raster.join(", ") +
+      ") nu pot fi vectorizate — folosiți tipărirea pentru ele."), 300);
+  }
+}
+
+/* cadru zebrat cu coordonate --------------------------------------------- */
+const FRAME_PX = 26;          // lățimea ramei, în pixeli de coală
+const GRID_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500,
+                    1000, 2000, 2500, 5000, 10000, 20000, 50000];
+
+function niceStep(span, target) {
+  const raw = span / Math.max(2, target);
+  for (let i = 0; i < GRID_STEPS.length; i++) {
+    if (GRID_STEPS[i] >= raw) return GRID_STEPS[i];
+  }
+  return GRID_STEPS[GRID_STEPS.length - 1];
+}
+
+function toST70(lat, lng) {
+  const c = proj4("EPSG:4326", "EPSG:3844", [lng, lat]);
+  return { e: c[0], n: c[1] };      // e = est (Y), n = nord (X)
+}
+function fromST70(e, n) {
+  const c = proj4("EPSG:3844", "EPSG:4326", [e, n]);
+  return L.latLng(c[1], c[0]);
+}
+
+function fmtGrid(value, step) {
+  const dec = step < 1 ? 2 : 0;
+  return value.toLocaleString("ro-RO", { minimumFractionDigits: dec,
+                                         maximumFractionDigits: dec, useGrouping: true });
+}
+
+// Liniile de grilă se caută prin bisecție pe fiecare latură: în Web Mercator o
+// linie Stereo 70 nu e perfect verticală, iar poziția exactă pe ramă contează.
+function crossings(m, axis, isTop, step, useST70, k) {
+  k = k || 1;
+  const size = m.getSize();
+  const horizontal = axis === "x";
+  const fixed = horizontal ? (isTop ? 0 : size.y) : (isTop ? 0 : size.x);
+  const valueAt = pos => {
+    const p = horizontal ? L.point(pos * k, fixed) : L.point(fixed, pos * k);
+    const ll = m.containerPointToLatLng(p);
+    if (!useST70) return horizontal ? ll.lng : ll.lat;
+    const c = toST70(ll.lat, ll.lng);
+    return horizontal ? c.e : c.n;
+  };
+  const limit = (horizontal ? size.x : size.y) / k;
+  const v0 = valueAt(2), v1 = valueAt(limit - 2);
+  const lo = Math.min(v0, v1), hi = Math.max(v0, v1);
+  const out = [];
+  const first = Math.ceil(lo / step) * step;
+  for (let v = first; v <= hi && out.length < 60; v += step) {
+    let a = 2, b = limit - 2;
+    for (let k = 0; k < 24; k++) {
+      const mid = (a + b) / 2;
+      const vm = valueAt(mid);
+      if ((valueAt(a) - v) * (vm - v) <= 0) b = mid; else a = mid;
+    }
+    out.push({ pos: (a + b) / 2, value: v });
+  }
+  return out;
+}
+
+function drawFrame(m, holder, useST70) {
+  const k = m._dpiFactor || 1;
+  const raw = m.getSize();
+  const size = L.point(raw.x / k, raw.y / k);
+  const W = size.x + FRAME_PX * 2, H = size.y + FRAME_PX * 2;
+  const spanX = Math.abs((useST70
+    ? toST70(m.getCenter().lat, m.getBounds().getEast()).e -
+      toST70(m.getCenter().lat, m.getBounds().getWest()).e
+    : m.getBounds().getEast() - m.getBounds().getWest()));
+  const spanY = Math.abs((useST70
+    ? toST70(m.getBounds().getNorth(), m.getCenter().lng).n -
+      toST70(m.getBounds().getSouth(), m.getCenter().lng).n
+    : m.getBounds().getNorth() - m.getBounds().getSouth()));
+  const step = Math.max(niceStep(spanX, 6), niceStep(spanY, 5));
+
+  const top = crossings(m, "x", true, step, useST70, k);
+  const bottom = crossings(m, "x", false, step, useST70, k);
+  const left = crossings(m, "y", true, step, useST70, k);
+  const right = crossings(m, "y", false, step, useST70, k);
+
+  const svg = ['<svg class="frame" width="' + W + '" height="' + H +
+    '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'];
+  const F = FRAME_PX, IB = 9;   // IB = grosimea benzii zebrate
+  const inner = { x: F, y: F, w: size.x, h: size.y };
+
+  // fundalul alb se pune DOAR pe ramă: un dreptunghi pe toată suprafața ar
+  // acoperi harta, fiindcă SVG-ul stă deasupra ei
+  svg.push('<g fill="#fff">' +
+    '<rect x="0" y="0" width="' + W + '" height="' + F + '"/>' +
+    '<rect x="0" y="' + (H - F) + '" width="' + W + '" height="' + F + '"/>' +
+    '<rect x="0" y="0" width="' + F + '" height="' + H + '"/>' +
+    '<rect x="' + (W - F) + '" y="0" width="' + F + '" height="' + H + '"/>' +
+    "</g>");
+  svg.push('<rect x="' + inner.x + '" y="' + inner.y + '" width="' + inner.w +
+    '" height="' + inner.h + '" fill="none" stroke="#111" stroke-width="0.8"/>');
+
+  // benzile alternante, pe fiecare latură, între liniile de grilă
+  function zebra(marks, along, isVertical, offset) {
+    const limit = isVertical ? inner.h : inner.w;
+    const stops = [0].concat(marks.map(mk => mk.pos)).concat([limit]);
+    for (let i = 0; i < stops.length - 1; i++) {
+      const a = Math.max(0, Math.min(limit, stops[i]));
+      const b = Math.max(0, Math.min(limit, stops[i + 1]));
+      if (b - a < 0.4) continue;
+      const fill = i % 2 ? "#111" : "#fff";
+      const x = isVertical ? offset : inner.x + a;
+      const y = isVertical ? inner.y + a : offset;
+      const w = isVertical ? IB : (b - a);
+      const h = isVertical ? (b - a) : IB;
+      svg.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h +
+        '" fill="' + fill + '" stroke="#111" stroke-width="0.4"/>');
+    }
+  }
+  zebra(top, "x", false, inner.y - IB);
+  zebra(bottom, "x", false, inner.y + inner.h);
+  zebra(left, "y", true, inner.x - IB);
+  zebra(right, "y", true, inner.x + inner.w);
+
+  // liniile interioare, punctate discret
+  const tick = [];
+  top.forEach(mk => tick.push('<line x1="' + (inner.x + mk.pos) + '" y1="' + inner.y +
+    '" x2="' + (inner.x + mk.pos) + '" y2="' + (inner.y + inner.h) + '"/>'));
+  left.forEach(mk => tick.push('<line x1="' + inner.x + '" y1="' + (inner.y + mk.pos) +
+    '" x2="' + (inner.x + inner.w) + '" y2="' + (inner.y + mk.pos) + '"/>'));
+  svg.push('<g fill="none" stroke="#111" stroke-width="0.35" ' +
+    'stroke-dasharray="1.5,4" opacity="0.45">' + tick.join("") + "</g>");
+
+  // etichetele de coordonate
+  const labels = [];
+  const seenTop = {};
+  top.forEach(mk => {
+    const key = Math.round(mk.pos);
+    if (seenTop[key]) return;
+    seenTop[key] = 1;
+    labels.push('<text x="' + (inner.x + mk.pos) + '" y="' + (inner.y - IB - 3) +
+      '" text-anchor="middle">' + fmtGrid(mk.value, step) + "</text>");
+  });
+  bottom.forEach(mk => labels.push('<text x="' + (inner.x + mk.pos) + '" y="' +
+    (inner.y + inner.h + IB + 8) + '" text-anchor="middle">' +
+    fmtGrid(mk.value, step) + "</text>"));
+  left.forEach(mk => labels.push('<text x="' + (inner.x - IB - 4) + '" y="' +
+    (inner.y + mk.pos) + '" text-anchor="middle" transform="rotate(-90 ' +
+    (inner.x - IB - 4) + " " + (inner.y + mk.pos) + ')">' +
+    fmtGrid(mk.value, step) + "</text>"));
+  right.forEach(mk => labels.push('<text x="' + (inner.x + inner.w + IB + 5) + '" y="' +
+    (inner.y + mk.pos) + '" text-anchor="middle" transform="rotate(90 ' +
+    (inner.x + inner.w + IB + 5) + " " + (inner.y + mk.pos) + ')">' +
+    fmtGrid(mk.value, step) + "</text>"));
+  svg.push(labels.join(""));
+
+  const unit = useST70 ? "m · Stereo 70" : "° · WGS84";
+  svg.push('<text x="' + (W - 2) + '" y="' + (H - 1.5) + '" text-anchor="end" ' +
+    'font-size="5.4pt" fill="#555">interval ' + fmtGrid(step, step) + " " + unit + "</text>");
+  svg.push("</svg>");
+
+  const old = holder.querySelector(".frame");
+  if (old) old.remove();
+  holder.insertAdjacentHTML("beforeend", svg.join(""));
 }
 
 function openPrint() {
@@ -2025,31 +3146,16 @@ function buildSheet() {
     document.getElementById("ptitle").value || CFG.title || "Hartă";
   const now = new Date();
   const crsName = document.getElementById("pcrs").value;
-  document.getElementById("sh_meta").innerHTML =
-    esc(document.getElementById("psub").value || "") +
-    (withScale ? "<br>Scara " + esc(scaleText()) + " · " +
-      (crsName === "st70" ? "Stereo 70 (EPSG:3844)" : "WGS84 (EPSG:4326)") : "");
   document.getElementById("sh_date").textContent = now.toLocaleString("ro-RO");
-  const ctr = map.getCenter();
-  const box = map.getBounds();
-  let coords = "";
-  if (withScale) {
-    if (crsName === "st70") {
-      coords = "Centru: " + fmtST70(ctr.lat, ctr.lng) +
-        "   ·   SV: " + fmtST70(box.getSouth(), box.getWest()) +
-        "   ·   NE: " + fmtST70(box.getNorth(), box.getEast());
-    } else {
-      coords = "Centru: " + ctr.lat.toFixed(5) + ", " + ctr.lng.toFixed(5) +
-        "   ·   SV: " + box.getSouth().toFixed(5) + ", " + box.getWest().toFixed(5) +
-        "   ·   NE: " + box.getNorth().toFixed(5) + ", " + box.getEast().toFixed(5);
-    }
-  }
-  document.getElementById("sh_foot").textContent = coords;
+  document.getElementById("sh_meta").innerHTML =
+    esc(document.getElementById("psub").value || "");
+  document.getElementById("sh_foot").textContent = "";
 
   const side = document.getElementById("sh_side");
   side.style.display = withLegend ? "" : "none";
   side.innerHTML = withLegend ? "<h3>Legendă</h3>" + legendHtml(scopeVisible) : "";
 
+  const withGrid = document.getElementById("pgrid").checked;
   const holder = document.getElementById("sh_map");
   const wMm = size[0] - (withLegend ? 48 : 0);
   holder.style.width = Math.round(wMm * MM) + "px";
@@ -2058,12 +3164,31 @@ function buildSheet() {
 
   if (printMap) { printMap.remove(); printMap = null; }
   holder.innerHTML = "";
-  printMap = L.map(holder, { zoomControl: false, attributionControl: false,
-    zoomAnimation: false, fadeAnimation: false, preferCanvas: true });
+  const inset = withGrid ? FRAME_PX : 0;
+  // Rezoluția se obține randând harta la dimensiune multiplicată și micșorând-o
+  // apoi prin CSS: tile-urile și vectorii se desenează la mai mulți pixeli.
+  const dpiFactor = parseInt(document.getElementById("pdpi").value, 10) || 1;
+  const cw = parseInt(holder.style.width, 10) - inset * 2;
+  const ch = parseInt(holder.style.height, 10) - inset * 2;
+  const canvas = document.createElement("div");
+  canvas.className = "pmap";
+  canvas.style.left = canvas.style.top = inset + "px";
+  canvas.style.width = (cw * dpiFactor) + "px";
+  canvas.style.height = (ch * dpiFactor) + "px";
+  if (dpiFactor !== 1) canvas.style.transform = "scale(" + (1 / dpiFactor) + ")";
+  holder.appendChild(canvas);
+  // zoomSnap 0: scările fixe cer niveluri fracționare de zoom
+  printMap = L.map(canvas, { zoomControl: false, attributionControl: false,
+    zoomAnimation: false, fadeAnimation: false, preferCanvas: true,
+    zoomSnap: 0, zoomDelta: 0.25 });
 
-  if (baseLayer) {
+  if (baseLayer && document.getElementById("pbase").value === "keep") {
     const url = baseLayer._url;
-    if (url) L.tileLayer(url, baseLayer.options).addTo(printMap);
+    if (url) {
+      const opts = Object.assign({}, baseLayer.options);
+      opts.detectRetina = false;
+      L.tileLayer(url, opts).addTo(printMap);
+    }
   }
   // straturile vizibile se reconstruiesc din aceleași date, în ordinea din panou
   for (let i = entries.length - 1; i >= 0; i--) {
@@ -2098,9 +3223,53 @@ function buildSheet() {
     } catch (err) { /* un strat problematic nu oprește tipărirea */ }
   }
 
-  printMap.fitBounds(scopeVisible ? map.getBounds() : bounds, { padding: [6, 6] });
+  const mode = document.getElementById("pscale2").value;
+  const zBoost = Math.log2(dpiFactor);     // păstrează scara la rezoluție mărită
+  const target = scopeVisible ? map.getBounds() : bounds;
+  if (mode === "fit") {
+    printMap.fitBounds(target, { padding: [4 * dpiFactor, 4 * dpiFactor] });
+  } else if (mode === "width") {
+    // aceeași lățime de teritoriu ca pe ecran, indiferent de formatul colii
+    printMap.setView(target.getCenter(), 10);
+    const size2 = printMap.getSize();
+    const west = printMap.project(L.latLng(target.getCenter().lat, target.getWest()), 10);
+    const east = printMap.project(L.latLng(target.getCenter().lat, target.getEast()), 10);
+    const need = Math.abs(east.x - west.x);
+    printMap.setView(target.getCenter(),
+      10 + Math.log2(size2.x / Math.max(1, need)), { animate: false });
+  } else {
+    printMap.setView(target.getCenter(),
+      zoomForPrintScale(parseFloat(mode)) + zBoost, { animate: false });
+  }
   L.control.scale({ imperial: false, position: "bottomleft", maxWidth: 140 }).addTo(printMap);
+  if (withGrid) {
+    printMap.whenReady(() => drawFrame(printMap, holder, crsName === "st70"));
+  }
+  stampSheet(printMap, withScale, crsName, dpiFactor);
+  printMap._dpiFactor = dpiFactor;
   return printMap;
+}
+
+// antetul și subsolul se completează din harta de tipar, nu din cea de pe ecran
+function stampSheet(m, withScale, crsName, factor) {
+  const sub = document.getElementById("psub").value || "";
+  document.getElementById("sh_meta").innerHTML = esc(sub) +
+    (withScale ? "<br>Scara " + esc(scaleText(m, factor)) + " · " +
+      (crsName === "st70" ? "Stereo 70 (EPSG:3844)" : "WGS84 (EPSG:4326)") : "");
+
+  if (!withScale) { document.getElementById("sh_foot").textContent = ""; return; }
+  const ctr = m.getCenter(), box = m.getBounds();
+  let coords;
+  if (crsName === "st70") {
+    coords = "Centru: " + fmtST70(ctr.lat, ctr.lng) +
+      "   ·   SV: " + fmtST70(box.getSouth(), box.getWest()) +
+      "   ·   NE: " + fmtST70(box.getNorth(), box.getEast());
+  } else {
+    coords = "Centru: " + ctr.lat.toFixed(5) + ", " + ctr.lng.toFixed(5) +
+      "   ·   SV: " + box.getSouth().toFixed(5) + ", " + box.getWest().toFixed(5) +
+      "   ·   NE: " + box.getNorth().toFixed(5) + ", " + box.getEast().toFixed(5);
+  }
+  document.getElementById("sh_foot").textContent = coords;
 }
 
 function waitTiles(m, done) {
@@ -2124,6 +3293,12 @@ function doPrint() {
   m.invalidateSize();
   waitTiles(m, () => {
     m.invalidateSize();
+    stampSheet(m, document.getElementById("pscale").checked,
+               document.getElementById("pcrs").value, m._dpiFactor || 1);
+    if (document.getElementById("pgrid").checked) {
+      drawFrame(m, document.getElementById("sh_map"),
+                document.getElementById("pcrs").value === "st70");
+    }
     setTimeout(() => {
       window.print();
       setTimeout(() => { sheet.style.display = ""; }, 400);
@@ -2133,6 +3308,7 @@ function doPrint() {
 
 document.getElementById("pcancel").addEventListener("click", closePrint);
 document.getElementById("pgo").addEventListener("click", doPrint);
+document.getElementById("ppdf").addEventListener("click", savePdf);
 pdlg.addEventListener("click", ev => { if (ev.target === pdlg) closePrint(); });
 document.addEventListener("keydown", ev => {
   if (ev.key === "Escape") closePrint();
